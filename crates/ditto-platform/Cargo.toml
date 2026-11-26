@@ -1,0 +1,33 @@
+[package]
+name = "ditto-platform"
+description = "OS integration for Ditto-RS: clipboard read/write/watch, paste keystrokes and focus tracking on Windows, macOS and Linux"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+clipboard-rs = "0.3.5"
+ditto-core.workspace = true
+enigo = "0.6"
+log.workspace = true
+thiserror.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", features = ["NSRunningApplication", "NSWorkspace", "libc"] }
+objc2-foundation = { version = "0.3", features = ["NSString"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_Console",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+clipboard-rs = { version = "0.3.5", features = ["wayland"] }
+x11rb = "0.13"

@@ -1,0 +1,29 @@
+[package]
+name = "ditto-core"
+description = "Platform-independent core of Ditto-RS: clip model, SQLite history, search, special-paste transforms, settings and Ditto database import"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = ["store"]
+# The SQLite-backed history store and the Ditto.db importer. Disable to use only the
+# model/search/transform types (ditto-platform does this so it can be type-checked for
+# other targets without a C toolchain for the bundled SQLite).
+store = ["dep:rusqlite"]
+
+[dependencies]
+chrono.workspace = true
+image.workspace = true
+log.workspace = true
+regex.workspace = true
+rusqlite = { workspace = true, optional = true }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

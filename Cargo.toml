@@ -1,0 +1,32 @@
+[workspace]
+resolver = "3"
+members = ["crates/ditto-core", "crates/ditto-platform", "app"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["Ditto-RS contributors"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/krynv/ditto-rs"
+
+[workspace.dependencies]
+ditto-core = { path = "crates/ditto-core", default-features = false }
+ditto-platform = { path = "crates/ditto-platform" }
+
+anyhow = "1"
+base64 = "0.22"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+image = { version = "0.25", default-features = false, features = ["png", "bmp"] }
+log = "0.4"
+regex = "1"
+rusqlite = { version = "0.43", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tempfile = "3"
+thiserror = "2"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

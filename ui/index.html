@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ditto-RS</title>
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app" class="popup">
+    <header class="titlebar" data-tauri-drag-region>
+      <button id="group-button" class="group-button" title="Groups (Ctrl+G)">
+        <span id="group-icon" class="group-icon" aria-hidden="true"></span>
+        <span id="group-name">All clips</span>
+        <span class="chevron" aria-hidden="true"></span>
+      </button>
+      <span class="spacer" data-tauri-drag-region></span>
+      <span id="status" class="status" data-tauri-drag-region></span>
+      <button id="pin-button" class="icon-button" title="Keep this window open (Ctrl+Space)" aria-pressed="false"></button>
+      <button id="menu-button" class="icon-button" title="Menu" aria-haspopup="menu"></button>
+    </header>
+    <div id="banner" class="banner" hidden></div>
+    <main id="list" class="list" role="listbox" aria-label="Clips" aria-multiselectable="true"></main>
+    <div id="empty" class="empty" hidden></div>
+    <footer class="searchbar">
+      <span class="search-icon" aria-hidden="true"></span>
+      <input id="search" type="text" placeholder="Type to search" spellcheck="false" autocomplete="off" aria-label="Search clips">
+      <button id="mode-button" class="mode-button" title="Search mode (click to change)"></button>
+    </footer>
+    <section id="preview" class="preview" hidden aria-label="Clip preview">
+      <div class="preview-head">
+        <div id="preview-tabs" class="tabs" role="tablist"></div>
+        <span class="spacer"></span>
+        <span id="preview-meta" class="muted preview-meta"></span>
+        <button id="preview-close" class="icon-button" title="Close (F3 or Esc)"></button>
+      </div>
+      <div id="preview-body" class="preview-body"></div>
+    </section>
+    <div id="menu-layer" class="menu-layer" hidden></div>
+    <div id="dialog-layer" class="dialog-layer" hidden></div>
+  </div>
+  <script src="common.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

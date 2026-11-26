@@ -1,0 +1,32 @@
+[package]
+name = "ditto-rs"
+description = "Ditto-RS: a cross-platform clipboard manager re-creating Ditto"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+default-run = "ditto-rs"
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+anyhow.workspace = true
+base64.workspace = true
+chrono.workspace = true
+ditto-core = { workspace = true, features = ["store"] }
+ditto-platform.workspace = true
+dirs = "6"
+env_logger = "0.11"
+# Used directly (not via tauri-plugin-global-shortcut, which pins 0.8): 0.10 adds the ISO
+# keys such as IntlBackslash (the § key on Apple ISO keyboards).
+global-hotkey = "0.10"
+log.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2.12", features = ["tray-icon", "image-png"] }
+tauri-plugin-autostart = "2.7"
+tauri-plugin-dialog = "2.8"
+tauri-plugin-single-instance = "2.5"
