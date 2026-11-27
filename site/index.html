@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ditto-RS: a clipboard manager for Windows, macOS and Linux</title>
+  <meta name="description" content="Ditto-RS keeps a searchable history of everything you copy: text, pictures and files. Press a hotkey, type a few letters, press Enter. Free, open source, and nothing leaves your computer.">
+  <link rel="canonical" href="https://krynv.github.io/ditto-rs/">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#17153a">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Ditto-RS">
+  <meta property="og:title" content="Ditto-RS: everything you copy, one keystroke away">
+  <meta property="og:description" content="A free, open-source clipboard manager for Windows, macOS and Linux. Searchable history of text, pictures and files. Nothing leaves your computer.">
+  <meta property="og:url" content="https://krynv.github.io/ditto-rs/">
+  <meta property="og:image" content="https://krynv.github.io/ditto-rs/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The Ditto-RS quick-paste window listing recent clips, next to the words: Everything you copy, one keystroke away.">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="favicon.png" type="image/png" sizes="64x64">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Ditto-RS",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Windows 10, Windows 11, macOS 10.15 or later, Linux",
+    "description": "A clipboard manager that keeps a searchable history of everything you copy: text, pictures and files.",
+    "url": "https://krynv.github.io/ditto-rs/",
+    "downloadUrl": "https://github.com/krynv/ditto-rs/releases/latest",
+    "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the content</a>
+
+  <div class="hero">
+    <header class="top wrap">
+      <a class="brand" href="./" aria-label="Ditto-RS, home">
+        <img src="icon.png" alt="" width="36" height="36">
+        <span>Ditto-RS</span>
+      </a>
+      <nav aria-label="Sections">
+        <a href="#try">Try it</a>
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/krynv/ditto-rs">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="hero-body wrap">
+      <div class="hero-text">
+        <p class="eyebrow">Free and open source · Windows, macOS, Linux</p>
+        <h1>Everything you copy, one keystroke away.</h1>
+        <p class="lead">
+          Ditto-RS remembers what you copy: text, pictures and files. Press
+          <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>`</kbd>, type a few letters and hit <kbd>Enter</kbd>.
+          It is pasted straight into the app you were using.
+        </p>
+        <div class="cta">
+          <a class="button primary" id="hero-download" href="https://github.com/krynv/ditto-rs/releases/latest">Download Ditto-RS</a>
+          <a class="button ghost" href="#try">Try it in your browser</a>
+        </div>
+        <p class="cta-note" id="hero-note">Free for Windows, macOS and Linux. No account, no tracking.</p>
+      </div>
+      <div class="hero-shot">
+        <img src="shots/popup.webp" width="840" height="1040" fetchpriority="high"
+             alt="The Ditto-RS quick-paste window: a numbered list of recent clips, including a signature, a web address, a code snippet, a picture and two files, above a search box.">
+      </div>
+    </div>
+  </div>
+
+  <main id="main">
+    <section class="section wrap" id="try" aria-labelledby="try-title">
+      <div class="section-head">
+        <h2 id="try-title">Try it right here</h2>
+        <p>This is the real Ditto-RS window, running in your browser with sample clips. Nothing you type leaves this page.</p>
+      </div>
+
+      <div class="demo" id="demo">
+        <div class="demo-desktop">
+          <div class="demo-window" id="demo-notes">
+            <div class="demo-titlebar"><span class="demo-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>Notes</span></div>
+            <label class="visually-hidden" for="demo-note">A sample note. Copy text from it, and paste clips into it.</label>
+            <textarea id="demo-note" spellcheck="false" autocomplete="off">Shopping list for Saturday
+
+- Sourdough from the bakery on Mill Road
+- Two lemons, flat-leaf parsley, good olive oil
+- Call the plumber: 020 7946 0321
+
+Select anything here and copy it. It joins your clipboard history.
+</textarea>
+          </div>
+
+          <div class="demo-popup" id="demo-popup" hidden></div>
+
+          <div class="demo-start" id="demo-start-panel">
+            <button class="button primary" id="demo-start" type="button">Start the demo</button>
+            <p>Works best with a keyboard.</p>
+          </div>
+          <p class="demo-toast" id="demo-toast" role="status" aria-live="polite"></p>
+        </div>
+
+        <ol class="demo-steps">
+          <li><strong>Copy something.</strong> Select text in the note and press <kbd class="mod-key">Ctrl</kbd>&nbsp;+&nbsp;<kbd>C</kbd>.</li>
+          <li><strong>Open Ditto-RS.</strong> Press <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>`</kbd>, or use the button. Your copy is at the top.
+            <button class="button small" id="demo-open" type="button" hidden>Open Ditto-RS</button></li>
+          <li><strong>Find and paste.</strong> Type a few letters, pick a clip with <kbd>↑</kbd> <kbd>↓</kbd> and press <kbd>Enter</kbd>. It lands in the note.</li>
+          <li><strong>Look around.</strong> <kbd>F3</kbd> previews a clip. Right-click one for Special Paste, groups and sticky clips.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section tinted" id="features" aria-labelledby="features-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="features-title">What it does</h2>
+          <p>If you have used Ditto on Windows, you already know how it works. Now it works on your Mac and your Linux machine too.</p>
+        </div>
+
+        <ul class="features">
+          <li>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4.5V3.6c0-.9.7-1.6 1.6-1.6h2.8c.9 0 1.6.7 1.6 1.6v.9M9 10h6M9 14h6M9 18h3"/></svg>
+            <h3>It keeps everything you copy</h3>
+            <p>Text, formatted text, pictures and lists of files, saved in a history on your own disk. Copy the same thing again and it moves back to the top.</p>
+          </li>
+          <li>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+            <h3>You find things by typing</h3>
+            <p>Start typing and the list narrows. Words are combined, and you can add <code>OR</code>, <code>NOT</code>, <code>"exact phrases"</code>, wildcards or regular expressions.</p>
+          </li>
+          <li>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5v6a4 4 0 0 1-4 4H5"/><path d="m9 11-4 4 4 4"/></svg>
+            <h3>It pastes where you were</h3>
+            <p>Pick a clip and Ditto-RS returns to the app you came from and pastes for you. <kbd>Shift</kbd>&nbsp;+&nbsp;<kbd>Enter</kbd> pastes plain text. <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>1</kbd> to <kbd>0</kbd> paste the ten newest clips.</p>
+          </li>
+          <li>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg>
+            <h3>Special Paste</h3>
+            <p>Paste in UPPER CASE or lower case, trimmed, on one line, as a web-address slug, or with the time added. Select several clips and paste them together.</p>
+          </li>
+          <li>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l-1 6 3.5 3.5V14H6.5v-1.5L10 9 9 3ZM12 14v7"/></svg>
+            <h3>Keep what matters</h3>
+            <p>Pin clips to the top, sort them into groups, give them names, and give your favourites their own hotkey that works anywhere.</p>
+          </li>
+          <li>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.4 3 8 7.5 9.5 4.5-1.500 7.5-5.100 7.5-9.500V6L12 3Z"/><path d="m9 12 2.200 2.200L15.200 10"/></svg>
+            <h3>Private by design</h3>
+            <p>Your history never leaves your computer: no account, no sync, no telemetry. Copies that password managers mark as secret are skipped, and you can exclude any app.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section wrap" aria-labelledby="look-title">
+      <h2 class="visually-hidden" id="look-title">A closer look</h2>
+
+      <div class="showcase">
+        <div class="showcase-text">
+          <h3>See a clip before you paste it</h3>
+          <p>Press <kbd>F3</kbd> to look at the whole clip: the full text, the formatted version, the picture at full size, or the list of files, with where and when you copied it.</p>
+        </div>
+        <div class="stage">
+          <img src="shots/preview.webp" width="840" height="1040" loading="lazy"
+               alt="The preview panel showing a copied picture at full size, with tabs for Image and Info.">
+        </div>
+      </div>
+
+      <div class="showcase flip">
+        <div class="showcase-text">
+          <h3>Make it yours</h3>
+          <p>Light and dark themes, your own hotkeys, how much history to keep and for how long, which apps to ignore, and where the window opens. Sensible defaults, taken from Ditto, so you can leave it all alone.</p>
+        </div>
+        <div class="stage wide">
+          <img src="shots/options.webp" width="1520" height="1240" loading="lazy"
+               alt="The Options window on its General page, with settings for start-up, history size, supported types and applications.">
+        </div>
+      </div>
+
+      <aside class="callout" aria-labelledby="ditto-title">
+        <h3 id="ditto-title">Moving from Ditto on Windows?</h3>
+        <p>Bring your history with you. <strong>Options → Database → Import Ditto Database</strong> reads your <code>Ditto.db</code> and brings over your clips, groups, sticky clips, quick-paste text and hotkeys.</p>
+      </aside>
+    </section>
+
+    <section class="section tinted" aria-labelledby="keys-title">
+      <div class="wrap narrow">
+        <div class="section-head">
+          <h2 id="keys-title">Built for the keyboard</h2>
+          <p>Everything has a key. On a Mac, <kbd>⌘</kbd> works wherever <kbd>Ctrl</kbd> is listed.</p>
+        </div>
+        <table class="keys">
+          <caption class="visually-hidden">Keys in the quick-paste window</caption>
+          <thead class="visually-hidden"><tr><th scope="col">Keys</th><th scope="col">What they do</th></tr></thead>
+          <tbody>
+            <tr><th scope="row"><kbd>Enter</kbd></th><td>Paste the selected clip, or clips</td></tr>
+            <tr><th scope="row"><kbd>Shift</kbd> + <kbd>Enter</kbd></th><td>Paste as plain text</td></tr>
+            <tr><th scope="row"><kbd>Ctrl</kbd> + <kbd>1</kbd> … <kbd>0</kbd></th><td>Paste clip 1 to 10</td></tr>
+            <tr><th scope="row"><kbd>Shift</kbd> + <kbd>↑</kbd> <kbd>↓</kbd></th><td>Select several clips</td></tr>
+            <tr><th scope="row"><kbd>F3</kbd></th><td>Preview the whole clip</td></tr>
+            <tr><th scope="row"><kbd>F2</kbd></th><td>Edit the clip</td></tr>
+            <tr><th scope="row"><kbd>Ctrl</kbd> + <kbd>N</kbd></th><td>Write a new clip</td></tr>
+            <tr><th scope="row"><kbd>Ctrl</kbd> + <kbd>G</kbd></th><td>Switch group</td></tr>
+            <tr><th scope="row"><kbd>Ctrl</kbd> + <kbd>Space</kbd></th><td>Keep the window open</td></tr>
+            <tr><th scope="row"><kbd>Del</kbd></th><td>Delete the selected clips</td></tr>
+            <tr><th scope="row"><kbd>Esc</kbd></th><td>Clear the search, then close</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section wrap" id="download" aria-labelledby="download-title">
+      <div class="section-head">
+        <h2 id="download-title">Download</h2>
+        <p id="download-version">Free, for as long as you like. The latest version is on GitHub.</p>
+      </div>
+
+      <div class="downloads">
+        <article class="os" data-os="macos">
+          <h3>macOS</h3>
+          <p class="req">macOS 10.15 or later, Apple silicon and Intel</p>
+          <p class="os-buttons"><a class="button primary" data-asset="dmg" href="https://github.com/krynv/ditto-rs/releases/latest">Download for macOS</a></p>
+          <details>
+            <summary>First launch on a Mac</summary>
+            <p>The app is not notarized by Apple yet, so macOS will say it cannot check it. Try to open it once, then go to <strong>System Settings → Privacy &amp; Security</strong> and choose <strong>Open Anyway</strong>. When asked, allow <strong>Accessibility</strong> access so Ditto-RS can paste for you.</p>
+          </details>
+        </article>
+
+        <article class="os" data-os="windows">
+          <h3>Windows</h3>
+          <p class="req">Windows 10 and 11, 64-bit</p>
+          <p class="os-buttons">
+            <a class="button primary" data-asset="exe" href="https://github.com/krynv/ditto-rs/releases/latest">Download for Windows</a>
+            <a class="button quiet" data-asset="msi" href="https://github.com/krynv/ditto-rs/releases/latest">.msi</a>
+          </p>
+          <details>
+            <summary>First launch on Windows</summary>
+            <p>The installer is not signed with a publisher certificate yet, so SmartScreen may warn about an unknown publisher. Choose <strong>More info → Run anyway</strong>.</p>
+          </details>
+        </article>
+
+        <article class="os" data-os="linux">
+          <h3>Linux</h3>
+          <p class="req">64-bit, with WebKitGTK 4.1</p>
+          <p class="os-buttons">
+            <a class="button primary" data-asset="appimage" href="https://github.com/krynv/ditto-rs/releases/latest">AppImage</a>
+            <a class="button quiet" data-asset="deb" href="https://github.com/krynv/ditto-rs/releases/latest">.deb</a>
+            <a class="button quiet" data-asset="rpm" href="https://github.com/krynv/ditto-rs/releases/latest">.rpm</a>
+          </p>
+          <details>
+            <summary>Notes for Linux</summary>
+            <p>On X11 everything works. Wayland does not let apps register global hotkeys, so bind <code>ditto-rs --show</code> to a shortcut in your desktop's keyboard settings.</p>
+          </details>
+        </article>
+      </div>
+      <p class="all-downloads"><a href="https://github.com/krynv/ditto-rs/releases">All versions and release notes</a> · <a href="https://github.com/krynv/ditto-rs#build-from-source">Build it from source</a></p>
+    </section>
+
+    <section class="section tinted" aria-labelledby="faq-title">
+      <div class="wrap narrow">
+        <div class="section-head">
+          <h2 id="faq-title">Questions</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Is it really free?</summary>
+            <p>Yes. Ditto-RS is free and open source under the GPL-3.0 licence. There is no account, no subscription and no paid version.</p>
+          </details>
+          <details>
+            <summary>Does anything I copy leave my computer?</summary>
+            <p>No. Your history is a file on your own disk, and Ditto-RS has no account, no sync and no telemetry. The source code is public, so you do not have to take that on trust.</p>
+          </details>
+          <details>
+            <summary>What about passwords?</summary>
+            <p>Copies that password managers mark as secret are skipped. You can also list apps whose copies should never be saved, and switch saving off for a while from the menu.</p>
+          </details>
+          <details>
+            <summary>Is this the same as Ditto?</summary>
+            <p>No. <a href="https://github.com/sabrogden/Ditto">Ditto</a> is a much-loved clipboard manager for Windows by Scott Brogden. Ditto-RS is an independent re-creation of it, written in Rust, that also runs on macOS and Linux. It works the same way and can import a Ditto database, but the two share no code and are not affiliated.</p>
+          </details>
+          <details>
+            <summary>Why does my computer warn me when I open it?</summary>
+            <p>The installers are not signed with a paid Apple or Microsoft certificate yet, so macOS and Windows cannot verify who made them. The app is built in the open from public source code. The steps for the first launch are next to each download.</p>
+          </details>
+          <details>
+            <summary>Where is my history kept?</summary>
+            <p>In <code>%APPDATA%\Ditto-RS</code> on Windows, <code>~/Library/Application Support/Ditto-RS</code> on macOS and <code>~/.local/share/Ditto-RS</code> on Linux. Put an empty file named <code>portable</code> next to the program to keep everything beside it instead, for example on a USB stick.</p>
+          </details>
+          <details>
+            <summary>Does it work on Wayland?</summary>
+            <p>Mostly. Clipboard history works where the desktop supports the data-control protocol. Wayland does not let apps register global hotkeys or move focus, so you bind <code>ditto-rs --show</code> to a shortcut yourself. On X11 everything works.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap final" aria-labelledby="final-title">
+      <h2 id="final-title">Stop copying things twice.</h2>
+      <p><a class="button primary" id="final-download" href="https://github.com/krynv/ditto-rs/releases/latest">Download Ditto-RS</a></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p><strong>Ditto-RS</strong> is free software under the <a href="https://github.com/krynv/ditto-rs/blob/main/LICENSE">GNU General Public License v3.0</a>. Inspired by <a href="https://github.com/sabrogden/Ditto">Ditto</a> by Scott Brogden and contributors, and not affiliated with it.</p>
+      <p><a href="https://github.com/krynv/ditto-rs">Source code</a> · <a href="https://github.com/krynv/ditto-rs/issues">Report a problem</a> · <a href="https://github.com/krynv/ditto-rs/releases">Releases</a></p>
+      <p class="quiet-note">This page uses no cookies and no trackers.</p>
+    </div>
+  </footer>
+
+  <script src="site.js" defer></script>
+</body>
+</html>

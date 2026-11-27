@@ -12,7 +12,7 @@ A cross-platform re-creation of [Ditto](https://github.com/sabrogden/Ditto), wri
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20·%20macOS%20·%20Linux-5a57d6?style=flat-square)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-2f80ed?style=flat-square)](LICENSE)
 
-[**⬇ Download**](https://github.com/krynv/ditto-rs/releases/latest) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Keyboard](#keyboard) &nbsp;·&nbsp; [Build from source](#build-from-source)
+[**⬇ Download**](https://github.com/krynv/ditto-rs/releases/latest) &nbsp;·&nbsp; [**Website and live demo**](https://krynv.github.io/ditto-rs/) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Keyboard](#keyboard) &nbsp;·&nbsp; [Build from source](#build-from-source)
 
 <img src="docs/screenshots/hero.png" alt="The Ditto-RS quick-paste window over a gradient desktop" width="920">
 
@@ -143,6 +143,7 @@ crates/ditto-core      clip model, SQLite history, search, Special Paste, settin
 crates/ditto-platform  clipboard read/write/watch, focus tracking, paste keystroke (per-OS code)
 app/                   Tauri 2 shell: tray, hotkeys, windows, capture loop, paste flow, CLI
 ui/                    quick-paste and options windows (plain HTML/CSS/JS, no build step)
+site/                  the website; its live demo runs the files in ui/ (tools/build-site.sh)
 ```
 
 ## Roadmap
