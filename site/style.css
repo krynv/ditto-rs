@@ -148,8 +148,14 @@ h1 { font-size: clamp(2.6rem, 1.5rem + 4.4vw, 4.7rem); font-weight: 820; letter-
 
 .section { padding-block: clamp(3.5rem, 8vw, 6.5rem); }
 .tinted { background: var(--tint); }
-.section-head { max-width: 44rem; margin-bottom: clamp(1.8rem, 4vw, 3rem); }
+.section-head { margin-bottom: clamp(1.8rem, 4vw, 3rem); }
+.section-head > * { max-width: 44rem; }
 .section-head p { margin-top: 0.9rem; font-size: 1.2rem; color: var(--muted); }
+/* One sentence per line. The lines are short, so this paragraph is not held to the 44rem
+   measure: with a minimum font size or text-only zoom a sentence would otherwise wrap while
+   there is room. On a narrow screen each sentence wraps on its own, into even lines. */
+.section-head .lines { max-width: none; }
+.section-head .lines > span { display: block; text-wrap: balance; }
 
 /* ---- demo -------------------------------------------------------------------------------- */
 
