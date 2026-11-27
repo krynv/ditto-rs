@@ -29,7 +29,6 @@
   const $ = (id) => document.getElementById(id);
   const listEl = $('list');
   const searchEl = $('search');
-  const menuLayer = $('menu-layer');
   const dialogLayer = $('dialog-layer');
   const previewEl = $('preview');
 
@@ -607,149 +606,77 @@
   }
 
   // ---- menus ------------------------------------------------------------------------------
+  // The right-click, group and toolbar menus are native OS menus, as in Ditto: they can extend
+  // past the small quick-paste window, and the OS handles submenus, hover and the keyboard.
+  // Items are { label, shortcut?, checked?, disabled?, action? | submenu? } or '-' (separator).
+  // `submenu` is an array or a function returning one; it is only built for enabled items.
 
-  const menus = [];
+  const nativeMenu = window.__TAURI__.menu;
+  const { LogicalPosition } = window.__TAURI__.dpi;
+  // The last menu shown. On Linux popup() returns while the menu is still open, so a menu is
+  // freed when the next one opens instead of straight after popup().
+  let shownMenu = null;
 
-  function closeMenus() {
-    menus.length = 0;
-    menuLayer.textContent = '';
-    menuLayer.hidden = true;
+  /** Display shortcut ("⌘E", "Shift+Enter", "⌘⌫", "Del") → Tauri accelerator ("Cmd+E", …). */
+  function accelerator(shortcut) {
+    const keys = { Del: 'Delete', '⌫': 'Backspace', ',': 'Comma', Esc: 'Escape' };
+    return shortcut
+      .replace(/⌘/g, 'Cmd+').replace(/⌥/g, 'Alt+').replace(/⇧/g, 'Shift+').replace(/⌃/g, 'Ctrl+')
+      .split('+')
+      .map((part) => keys[part] || part)
+      .join('+');
   }
 
-  function openMenu(items, x, y, title) {
-    closeMenus();
-    menuLayer.hidden = false;
-    pushMenu(items, { x, y }, title);
-  }
-
-  function pushMenu(items, anchor, title) {
-    const node = el('div', 'menu');
-    node.setAttribute('role', 'menu');
-    if (title) node.append(el('div', 'menu-title', title));
-    const entry = { node, items, rows: [], index: -1 };
-    items.forEach((item, i) => {
+  /** Our menu items → Tauri menu item options, so one IPC call builds the whole tree. */
+  function nativeItems(items, withShortcuts) {
+    const out = [];
+    const isSeparator = (option) => option.item === 'Separator';
+    for (const item of items) {
       if (item === '-') {
-        node.append(el('div', 'menu-sep'));
-        entry.rows.push(null);
-        return;
+        if (out.length && !isSeparator(out[out.length - 1])) out.push({ item: 'Separator' });
+        continue;
       }
-      const row = el('div', `menu-item${item.disabled ? ' disabled' : ''}`);
-      row.setAttribute('role', 'menuitem');
-      const check = el('span', 'check');
-      if (item.checked) check.append(icon('check'));
-      row.append(check, el('span', 'label', item.label));
-      if (item.shortcut) row.append(el('span', 'shortcut', item.shortcut));
+      // A single & marks a mnemonic on every platform; && shows a literal &.
+      const base = { text: item.label.replace(/&/g, '&&'), enabled: !item.disabled };
       if (item.submenu) {
-        const sub = el('span', 'sub');
-        sub.append(icon('chevron'));
-        row.append(sub);
+        const children = item.disabled ? [] : typeof item.submenu === 'function' ? item.submenu() : item.submenu;
+        out.push({ ...base, items: nativeItems(children, withShortcuts) });
+        continue;
       }
-      row.addEventListener('mouseenter', () => setActive(entry, i, true));
-      row.addEventListener('mousedown', (e) => e.preventDefault());
-      row.addEventListener('click', (e) => {
-        e.stopPropagation();
-        activate(entry, i);
-      });
-      node.append(row);
-      entry.rows.push(row);
-    });
-    menuLayer.append(node);
-    placeMenu(node, anchor);
-    menus.push(entry);
-    return entry;
+      const option = { ...base, action: () => runMenuItem(item) };
+      if (withShortcuts && item.shortcut) option.accelerator = accelerator(item.shortcut);
+      if (item.checked !== undefined) option.checked = Boolean(item.checked);
+      out.push(option);
+    }
+    if (out.length && isSeparator(out[out.length - 1])) out.pop();
+    return out;
   }
 
-  function placeMenu(node, anchor) {
-    const r = node.getBoundingClientRect();
-    let x;
-    let y;
-    if (anchor.row) {
-      const pr = anchor.row.getBoundingClientRect();
-      x = pr.right - 2;
-      y = pr.top - 5;
-      if (x + r.width > window.innerWidth - 2) x = Math.max(2, pr.left - r.width + 2);
-    } else {
-      x = anchor.x;
-      y = anchor.y;
-      if (x + r.width > window.innerWidth - 2) x = Math.max(2, window.innerWidth - r.width - 2);
-    }
-    if (y + r.height > window.innerHeight - 4) y = Math.max(4, window.innerHeight - r.height - 4);
-    node.style.left = `${x}px`;
-    node.style.top = `${y}px`;
-  }
-
-  function setActive(entry, index, openSub) {
-    const level = menus.indexOf(entry);
-    while (menus.length > level + 1) menus.pop().node.remove();
-    entry.rows.forEach((row, i) => row && row.classList.toggle('active', i === index));
-    entry.index = index;
-    const item = entry.items[index];
-    if (openSub && item && item.submenu && !item.disabled) {
-      pushMenu(typeof item.submenu === 'function' ? item.submenu() : item.submenu, { row: entry.rows[index] });
-    }
-  }
-
-  function activate(entry, index) {
-    const item = entry.items[index];
-    if (!item || item === '-' || item.disabled) return;
-    if (item.submenu) {
-      setActive(entry, index, true);
-      const sub = menus[menus.length - 1];
-      if (sub !== entry) moveInMenu(sub, 1);
-      return;
-    }
-    closeMenus();
+  function runMenuItem(item) {
     searchEl.focus();
     if (item.action) item.action();
   }
 
-  function moveInMenu(entry, delta) {
-    const n = entry.items.length;
-    let i = entry.index;
-    for (let step = 0; step < n; step++) {
-      i = (i + delta + n) % n;
-      const item = entry.items[i];
-      if (item !== '-' && !item.disabled) break;
+  /** Show a menu with its top-left corner at (x, y) in window coordinates. */
+  async function openMenu(items, x, y, title) {
+    const list = title ? [{ label: title, disabled: true }, '-', ...items] : items;
+    try {
+      let menu;
+      try {
+        menu = await nativeMenu.Menu.new({ items: nativeItems(list, true) });
+      } catch (err) {
+        // A shortcut this platform can't display shouldn't cost the whole menu.
+        console.warn('menu shortcuts dropped:', err);
+        menu = await nativeMenu.Menu.new({ items: nativeItems(list, false) });
+      }
+      if (shownMenu) shownMenu.close().catch(() => {});
+      shownMenu = menu;
+      await invoke('context_menu_opening');
+      await menu.popup(new LogicalPosition(x, y));
+    } catch (err) {
+      toast(`Couldn't open the menu: ${err}`, 'error');
     }
-    setActive(entry, i, false);
-    const row = entry.rows[i];
-    if (row) row.scrollIntoView({ block: 'nearest' });
   }
-
-  function onMenuKey(e) {
-    const top = menus[menus.length - 1];
-    if (!top) return;
-    switch (e.key) {
-      case 'ArrowDown': moveInMenu(top, 1); break;
-      case 'ArrowUp': moveInMenu(top, -1); break;
-      case 'ArrowRight': if (top.index >= 0 && top.items[top.index].submenu) activate(top, top.index); break;
-      case 'ArrowLeft':
-      case 'Escape':
-        if (menus.length > 1) {
-          menus.pop().node.remove();
-        } else {
-          closeMenus();
-          searchEl.focus();
-        }
-        break;
-      case 'Enter':
-      case ' ':
-        if (top.index >= 0) activate(top, top.index);
-        break;
-      default:
-        return;
-    }
-    e.preventDefault();
-    e.stopPropagation();
-  }
-
-  menuLayer.addEventListener('mousedown', (e) => {
-    if (e.target === menuLayer) {
-      e.preventDefault();
-      closeMenus();
-      searchEl.focus();
-    }
-  });
 
   function groupTree() {
     const byParent = new Map();
@@ -845,7 +772,7 @@
       },
       { label: 'Properties…', shortcut: isMac ? '⌥Enter' : 'Alt+Enter', disabled: !one, action: propertiesDialog },
       '-',
-      { label: clips.length > 1 ? `Delete ${clips.length} Clips` : 'Delete', shortcut: 'Del', action: deleteSelection },
+      { label: clips.length > 1 ? `Delete ${clips.length} Clips` : 'Delete', shortcut: isMac ? '⌘⌫' : 'Del', action: deleteSelection },
     ];
   }
 
@@ -955,7 +882,6 @@
   let dialogClose = null;
 
   function openDialog({ title, body, buttons, full = false, initialFocus }) {
-    closeMenus();
     dialogLayer.textContent = '';
     const box = el('div', `dialog${full ? ' full' : ''}`);
     box.setAttribute('role', 'dialog');
@@ -1230,10 +1156,6 @@
 
   function onKeyDown(e) {
     if (!dialogLayer.hidden) return;
-    if (!menuLayer.hidden) {
-      onMenuKey(e);
-      return;
-    }
     const mod = primaryMod(e);
     const k = e.key;
 
@@ -1387,7 +1309,7 @@
     });
     $('menu-button').addEventListener('click', (e) => {
       const r = e.currentTarget.getBoundingClientRect();
-      openMenu(systemMenuItems(), r.right - 200, r.bottom + 2);
+      openMenu(systemMenuItems(), r.left, r.bottom + 2);
     });
     $('pin-button').addEventListener('click', toggleKeepOpen);
     $('mode-button').addEventListener('click', cycleMode);
@@ -1416,7 +1338,6 @@
   async function onShown(payload) {
     S.targetApp = payload.target_app || null;
     if (dialogClose) dialogClose();
-    closeMenus();
     if (S.preview.open) closePreview();
     searchEl.value = '';
     S.query = '';

@@ -102,6 +102,7 @@ fn run_gui(paths: Paths, show_on_start: bool, open_options: bool, quit: bool) {
             commands::save_clip_to_file,
             commands::hide_popup,
             commands::open_settings,
+            commands::context_menu_opening,
             commands::set_capture_paused,
             commands::toggle_keep_open,
             commands::save_current_clipboard,

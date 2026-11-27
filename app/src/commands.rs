@@ -490,6 +490,12 @@ pub fn open_settings(app: AppHandle) {
     popup::open_settings(&app);
 }
 
+/// The quick-paste window is about to show a native context menu (see `popup::on_window_event`).
+#[tauri::command(rename_all = "snake_case")]
+pub fn context_menu_opening(app: AppHandle) {
+    *state(&app).lock_menu_shown_at() = Some(std::time::Instant::now());
+}
+
 #[tauri::command(rename_all = "snake_case")]
 pub fn set_capture_paused(app: AppHandle, paused: bool) -> bool {
     tray::set_capture_paused(&app, paused);

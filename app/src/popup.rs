@@ -15,6 +15,10 @@ pub const SETTINGS: &str = "settings";
 
 /// Ignore focus loss this soon after showing (some window managers bounce focus).
 const BLUR_GRACE: Duration = Duration::from_millis(250);
+/// Opening a native context menu on Linux/X11 takes a keyboard grab, which GTK reports to the
+/// window as losing focus. Ignore focus loss this soon after a menu opens so the window doesn't
+/// hide underneath its own menu. (macOS and Windows keep the window focused while a menu is open.)
+const MENU_BLUR_GRACE: Duration = Duration::from_millis(1000);
 
 pub fn create_popup(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     if let Some(w) = app.get_webview_window(POPUP) {
@@ -150,7 +154,8 @@ pub fn on_window_event(window: &Window, event: &WindowEvent) {
         WindowEvent::Focused(false) => {
             let st = state(app);
             let recently_shown = st.lock_popup_shown_at().is_some_and(|t| t.elapsed() < BLUR_GRACE);
-            if !recently_shown && !st.settings().keep_open_on_blur {
+            let menu_just_opened = st.lock_menu_shown_at().is_some_and(|t| t.elapsed() < MENU_BLUR_GRACE);
+            if !recently_shown && !menu_just_opened && !st.settings().keep_open_on_blur {
                 hide(app);
             }
         }

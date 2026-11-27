@@ -37,6 +37,8 @@ pub struct AppState {
     /// macOS: we asked for the Accessibility permission once this session.
     pub accessibility_prompted: AtomicBool,
     pub popup_shown_at: Mutex<Option<Instant>>,
+    /// When the quick-paste window last opened a native context menu.
+    pub menu_shown_at: Mutex<Option<Instant>>,
 }
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -56,6 +58,7 @@ impl AppState {
             watcher: Mutex::new(None),
             accessibility_prompted: AtomicBool::new(false),
             popup_shown_at: Mutex::new(None),
+            menu_shown_at: Mutex::new(None),
         }
     }
 
@@ -102,6 +105,10 @@ impl AppState {
 
     pub fn lock_popup_shown_at(&self) -> MutexGuard<'_, Option<Instant>> {
         lock(&self.popup_shown_at)
+    }
+
+    pub fn lock_menu_shown_at(&self) -> MutexGuard<'_, Option<Instant>> {
+        lock(&self.menu_shown_at)
     }
 }
 
