@@ -512,6 +512,7 @@
     S.preview.details = details;
     const tabs = [];
     if (details.image) tabs.push(['image', 'Image']);
+    if (details.image_text) tabs.push(['image-text', 'Text in Image']);
     if (details.files.length) tabs.push(['files', 'Files']);
     if (details.text != null) tabs.push(['text', 'Text']);
     if (details.html) tabs.push(['html', 'HTML']);
@@ -549,6 +550,10 @@
         if (d.image_size) body.append(el('p', 'muted', `${d.image_size[0]} × ${d.image_size[1]} px`));
         break;
       }
+      case 'image-text':
+        // What search matches for this image (recognized on this computer).
+        body.append(el('pre', null, d.image_text));
+        break;
       case 'files':
         d.files.forEach((f) => body.append(el('div', 'file-line', f)));
         break;
@@ -581,6 +586,10 @@
           ['Never auto delete', s.never_auto_delete ? 'Yes' : 'No'],
           ['Formats', d.formats.map((f) => `${f.name} (${D.formatBytes(f.size)})`).join(', ')],
         ];
+        if (s.kind === 'image') {
+          const found = d.image_text == null ? 'Not read yet' : d.image_text ? `${d.image_text.length.toLocaleString()} characters, searchable` : 'None found';
+          rows.push(['Text in image', found]);
+        }
         for (const [k, v] of rows) {
           const tr = el('tr');
           tr.append(el('td', null, k), el('td', null, String(v)));
@@ -657,7 +666,31 @@
     if (item.action) item.action();
   }
 
-  /** Show a menu with its top-left corner at (x, y) in window coordinates. */
+  // ---- interface size --------------------------------------------------------------------
+
+  /** How much the page is zoomed (1 = 100 %). */
+  function pageZoom() {
+    return S.info && S.info.zoom_supported ? (S.settings.ui_zoom || 100) / 100 : 1;
+  }
+
+  /** Change the interface size of both windows. Applies and is saved at once. */
+  async function setZoom(percent) {
+    if (percent === (S.settings.ui_zoom || 100)) return;
+    S.settings = await call('set_ui_zoom', { percent });
+    toast(`Interface size: ${S.settings.ui_zoom}%`);
+  }
+
+  function zoomMenuItems() {
+    const current = S.settings.ui_zoom || 100;
+    return [
+      { label: 'Larger', shortcut: `${MOD}=`, disabled: D.nextZoom(current, 1) === current, action: () => setZoom(D.nextZoom(current, 1)) },
+      { label: 'Smaller', shortcut: `${MOD}-`, disabled: D.nextZoom(current, -1) === current, action: () => setZoom(D.nextZoom(current, -1)) },
+      '-',
+      ...D.ZOOM_STEPS.map((z) => ({ label: `${z}%`, checked: z === current, action: () => setZoom(z) })),
+    ];
+  }
+
+  /** Show a menu with its top-left corner at (x, y) in page coordinates. */
   async function openMenu(items, x, y, title) {
     const list = title ? [{ label: title, disabled: true }, '-', ...items] : items;
     try {
@@ -672,7 +705,9 @@
       if (shownMenu) shownMenu.close().catch(() => {});
       shownMenu = menu;
       await invoke('context_menu_opening');
-      await menu.popup(new LogicalPosition(x, y));
+      // The page is zoomed by the interface size; the window's own coordinates are not.
+      const zoom = pageZoom();
+      await menu.popup(new LogicalPosition(x * zoom, y * zoom));
     } catch (err) {
       toast(`Couldn't open the menu: ${err}`, 'error');
     }
@@ -811,6 +846,7 @@
       {
         label: 'Quick Options',
         submenu: () => [
+          ...(S.info && S.info.zoom_supported ? [{ label: 'Interface Size', submenu: zoomMenuItems }] : []),
           { label: 'Lines Per Clip', submenu: () => [1, 2, 3, 4, 5].map((n) => ({ label: String(n), checked: st.lines_per_clip === n, action: () => saveSettings({ lines_per_clip: n }) })) },
           {
             label: 'Positioning',
@@ -1155,6 +1191,13 @@
   // ---- keyboard -----------------------------------------------------------------------------
 
   function onKeyDown(e) {
+    // ⌘+ / ⌘− change the interface size anywhere, also while a dialog is open.
+    const zoomStep = S.info && S.info.zoom_supported ? D.zoomKey(e) : 0;
+    if (zoomStep) {
+      e.preventDefault();
+      setZoom(D.nextZoom(S.settings.ui_zoom || 100, zoomStep)).catch(() => {});
+      return;
+    }
     if (!dialogLayer.hidden) return;
     const mod = primaryMod(e);
     const k = e.key;

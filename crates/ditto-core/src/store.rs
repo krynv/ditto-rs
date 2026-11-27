@@ -17,7 +17,12 @@ use crate::model::{ClipContent, ClipKind, ClipSummary, Group, formats};
 use crate::search::{CompiledSearch, SearchFields};
 use crate::{Error, Result, imaging, now_ms};
 
+/// Bumped only for changes an older build could not cope with: it then refuses to open the
+/// database. Additive, nullable columns are added by [`ensure_column`] without a bump, so the
+/// history stays usable after a downgrade.
 pub const SCHEMA_VERSION: i64 = 1;
+/// Longest recognized text kept for one image (characters).
+pub const IMAGE_TEXT_MAX_CHARS: usize = 100_000;
 /// Thumbnail bounds (pixels). The list draws them at half size for HiDPI screens.
 pub const THUMB_MAX_W: u32 = 480;
 pub const THUMB_MAX_H: u32 = 160;
@@ -51,7 +56,8 @@ CREATE TABLE IF NOT EXISTS clips (
     never_auto_delete  INTEGER NOT NULL DEFAULT 0,
     quick_paste_text   TEXT,
     hotkey             TEXT,
-    thumbnail          BLOB
+    thumbnail          BLOB,
+    image_text         TEXT
 );
 CREATE TABLE IF NOT EXISTS clip_data (
     clip_id INTEGER NOT NULL REFERENCES clips(id) ON DELETE CASCADE,
@@ -70,6 +76,10 @@ CREATE INDEX IF NOT EXISTS groups_parent     ON groups(parent_id);
 /// auto delete", not in a group, not sticky).
 const UNPROTECTED: &str = "hotkey IS NULL AND never_auto_delete = 0 AND group_id IS NULL \
                            AND sticky_order IS NULL AND group_sticky_order IS NULL";
+
+/// Image clips whose text has not been recognized yet (`image_text`: NULL = not read,
+/// '' = read and no text found).
+const IMAGE_TEXT_PENDING: &str = "kind = 'image' AND image_text IS NULL";
 
 const SUMMARY_COLUMNS: &str = "c.id, c.description, c.kind, c.created_at, c.last_used_at, c.group_id, \
      c.sticky_order IS NOT NULL, c.group_sticky_order IS NOT NULL, c.never_auto_delete, \
@@ -197,6 +207,15 @@ pub struct Stats {
     pub oldest_clip: Option<i64>,
 }
 
+/// An image clip waiting for text recognition.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImageToRead {
+    pub id: i64,
+    /// Content hash, passed back to [`Store::set_image_text`].
+    pub hash: i64,
+    pub png: Vec<u8>,
+}
+
 pub struct Store {
     conn: Connection,
 }
@@ -233,6 +252,11 @@ impl Store {
             }
             _ => {}
         }
+        // Added in 0.2: the text recognized in an image clip (OCR). Not in Ditto.
+        ensure_column(&conn, "clips", "image_text", "TEXT")?;
+        conn.execute_batch(&format!(
+            "CREATE INDEX IF NOT EXISTS clips_image_text_pending ON clips(id) WHERE {IMAGE_TEXT_PENDING};"
+        ))?;
         Ok(Self { conn })
     }
 
@@ -331,9 +355,16 @@ impl Store {
     pub fn list(&self, q: &ListQuery<'_>) -> Result<ListPage> {
         let limit = q.limit.max(1);
         let needs_text = q.search.is_some_and(CompiledSearch::needs_full_text);
+        let needs_image_text = q.search.is_some_and(CompiledSearch::needs_image_text);
         let mut sql = format!("SELECT {SUMMARY_COLUMNS}");
-        if needs_text {
-            sql.push_str(", (SELECT d.data FROM clip_data d WHERE d.clip_id = c.id AND d.format = 'text')");
+        if q.search.is_some() {
+            // Columns 15 and 16, read below.
+            sql.push_str(if needs_text {
+                ", (SELECT d.data FROM clip_data d WHERE d.clip_id = c.id AND d.format = 'text')"
+            } else {
+                ", NULL"
+            });
+            sql.push_str(if needs_image_text { ", c.image_text" } else { ", NULL" });
         }
         sql.push_str(" FROM clips c");
         let mut args: Vec<Value> = Vec::new();
@@ -367,12 +398,14 @@ impl Store {
         let mut skipped = 0usize;
         while let Some(row) = rows.next()? {
             let summary = summary_from_row(row)?;
-            let full_text: Option<Vec<u8>> = if needs_text { row.get(15)? } else { None };
+            let full_text: Option<Vec<u8>> = row.get(15)?;
             let full_text = full_text.as_deref().map(String::from_utf8_lossy);
+            let image_text: Option<String> = row.get(16)?;
             let fields = SearchFields {
                 description: &summary.description,
                 quick_paste: summary.quick_paste_text.as_deref(),
                 full_text: full_text.as_deref(),
+                image_text: image_text.as_deref().filter(|t| !t.is_empty()),
             };
             if !search.matches(&fields) {
                 continue;
@@ -426,6 +459,52 @@ impl Store {
         found.map(|_| ()).ok_or_else(|| Error::NotFound(format!("clip {id}")))
     }
 
+    // ---- text in images (OCR; not in Ditto) ------------------------------------------
+
+    /// The newest image clip whose text has not been recognized yet, ignoring `skip`.
+    pub fn next_image_to_read(&self, skip: &[i64]) -> Result<Option<ImageToRead>> {
+        let mut sql = format!(
+            "SELECT c.id, c.hash, d.data FROM clips c JOIN clip_data d ON d.clip_id = c.id AND d.format = '{}'
+             WHERE c.{IMAGE_TEXT_PENDING}",
+            formats::PNG
+        );
+        if !skip.is_empty() {
+            sql.push_str(&format!(" AND c.id NOT IN ({})", vec!["?"; skip.len()].join(",")));
+        }
+        sql.push_str(" ORDER BY c.id DESC LIMIT 1");
+        Ok(self
+            .conn
+            .query_row(&sql, params_from_iter(skip), |r| Ok(ImageToRead { id: r.get(0)?, hash: r.get(1)?, png: r.get(2)? }))
+            .optional()?)
+    }
+
+    /// Save the text recognized in an image clip (empty = none found). `hash` is the content
+    /// hash the text was recognized from; returns `false` if the clip changed or is gone.
+    pub fn set_image_text(&mut self, id: i64, hash: i64, text: &str) -> Result<bool> {
+        let text = crate::text::truncate_chars(text.trim(), IMAGE_TEXT_MAX_CHARS);
+        let n = self.conn.execute("UPDATE clips SET image_text = ?1 WHERE id = ?2 AND hash = ?3", params![text, id, hash])?;
+        Ok(n > 0)
+    }
+
+    /// `None`: not an image or not read yet. `Some("")`: read, no text found.
+    pub fn image_text(&self, id: i64) -> Result<Option<String>> {
+        Ok(self
+            .conn
+            .query_row("SELECT image_text FROM clips WHERE id = ?1", [id], |r| r.get::<_, Option<String>>(0))
+            .optional()?
+            .flatten())
+    }
+
+    /// (images whose text has been read, images still waiting).
+    pub fn image_text_progress(&self) -> Result<(i64, i64)> {
+        Ok(self.conn.query_row(
+            "SELECT COALESCE(SUM(image_text IS NOT NULL), 0), COALESCE(SUM(image_text IS NULL), 0)
+             FROM clips WHERE kind = 'image'",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )?)
+    }
+
     // ---- editing -------------------------------------------------------------------
 
     /// Record a paste (Ditto `lastPasteDate`) and optionally move the clip to the top
@@ -476,7 +555,8 @@ impl Store {
         tx.execute("DELETE FROM clip_data WHERE clip_id = ?1", [id])?;
         insert_formats(&tx, id, content)?;
         tx.execute(
-            "UPDATE clips SET description = ?1, kind = ?2, formats = ?3, hash = ?4, size_bytes = ?5, thumbnail = ?6
+            "UPDATE clips SET description = ?1, kind = ?2, formats = ?3, hash = ?4, size_bytes = ?5, thumbnail = ?6,
+                              image_text = NULL
              WHERE id = ?7",
             params![
                 content.description(description_chars),
@@ -786,6 +866,19 @@ fn sticky_scope(scope: ListScope) -> (&'static str, String, Vec<Value>) {
         ListScope::Main => ("sticky_order", String::new(), Vec::new()),
         ListScope::Group(g) => ("group_sticky_order", " AND group_id = ?".to_string(), vec![Value::Integer(g)]),
     }
+}
+
+/// Add a column to a table created by an earlier version.
+fn ensure_column(conn: &Connection, table: &str, column: &str, definition: &str) -> Result<()> {
+    let exists: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM pragma_table_info(?1) WHERE name = ?2)",
+        params![table, column],
+        |r| r.get(0),
+    )?;
+    if !exists {
+        conn.execute_batch(&format!("ALTER TABLE {table} ADD COLUMN {column} {definition};"))?;
+    }
+    Ok(())
 }
 
 fn summary_from_row(r: &Row<'_>) -> rusqlite::Result<ClipSummary> {
@@ -1158,5 +1251,95 @@ mod tests {
         assert_eq!(s.count().unwrap(), 1);
         let backup = Store::open(&dir.path().join("backup.db")).unwrap();
         assert_eq!(backup.count().unwrap(), 1);
+    }
+
+    fn blank_png(w: u32, h: u32) -> Vec<u8> {
+        imaging::encode_png(&image::DynamicImage::new_rgb8(w, h)).unwrap()
+    }
+
+    #[test]
+    fn image_text_is_queued_saved_and_searched() {
+        let mut s = store();
+        add(&mut s, "hello from a text clip");
+        let old = s.add_clip(&ClipContent::from_png(blank_png(4, 4)), &AddOptions::default()).unwrap().id();
+        let new = s.add_clip(&ClipContent::from_png(blank_png(5, 5)), &AddOptions::default()).unwrap().id();
+        assert_eq!(s.image_text_progress().unwrap(), (0, 2));
+        assert_eq!(s.image_text(new).unwrap(), None);
+
+        // Newest first; text clips are never queued.
+        let job = s.next_image_to_read(&[]).unwrap().expect("an image is waiting");
+        assert_eq!(job.id, new);
+        assert_eq!(job.png, blank_png(5, 5));
+        assert_eq!(s.next_image_to_read(&[new]).unwrap().map(|j| j.id), Some(old));
+        assert_eq!(s.next_image_to_read(&[new, old]).unwrap(), None);
+
+        // A result for content that has since changed is dropped.
+        assert!(!s.set_image_text(new, job.hash + 1, "stale").unwrap());
+        assert!(s.set_image_text(new, job.hash, "  Hello World\nInvoice 48213 \n").unwrap());
+        assert_eq!(s.image_text(new).unwrap().as_deref(), Some("Hello World\nInvoice 48213"));
+        let other = s.next_image_to_read(&[]).unwrap().unwrap();
+        assert_eq!(other.id, old);
+        assert!(s.set_image_text(old, other.hash, "").unwrap());
+        assert_eq!(s.image_text(old).unwrap().as_deref(), Some(""));
+        assert_eq!(s.next_image_to_read(&[]).unwrap(), None);
+        assert_eq!(s.image_text_progress().unwrap(), (2, 0));
+
+        let find = |query: &str| {
+            let spec = SearchSpec { query: query.into(), ..Default::default() };
+            let search = CompiledSearch::compile(&spec).unwrap().unwrap();
+            s.list(&ListQuery { search: Some(&search), limit: 10, ..Default::default() })
+                .unwrap()
+                .items
+                .iter()
+                .map(|c| c.id)
+                .collect::<Vec<_>>()
+        };
+        // The default search (description only) finds the image by the words in it.
+        assert_eq!(find("invoice"), vec![new]);
+        assert_eq!(find("hello").len(), 2);
+        assert_eq!(find("/f 48213"), vec![new]);
+        assert_eq!(find("/q invoice"), Vec::<i64>::new());
+        assert_eq!(find("image"), vec![new, old]);
+    }
+
+    #[test]
+    fn replacing_an_image_queues_it_again() {
+        let mut s = store();
+        let id = s.add_clip(&ClipContent::from_png(blank_png(4, 4)), &AddOptions::default()).unwrap().id();
+        let job = s.next_image_to_read(&[]).unwrap().unwrap();
+        s.set_image_text(id, job.hash, "before").unwrap();
+        s.replace_content(id, &ClipContent::from_png(blank_png(6, 6)), 500).unwrap();
+        assert_eq!(s.image_text(id).unwrap(), None);
+        assert_eq!(s.next_image_to_read(&[]).unwrap().map(|j| j.png), Some(blank_png(6, 6)));
+    }
+
+    #[test]
+    fn opens_a_history_made_before_image_text_existed() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("history.db");
+        {
+            // The 0.1 schema: no `image_text` column.
+            let old_schema = SCHEMA.replace(",\n    image_text         TEXT", "");
+            assert_ne!(old_schema, SCHEMA);
+            let conn = Connection::open(&path).unwrap();
+            conn.execute_batch(&old_schema).unwrap();
+            conn.execute_batch(
+                "INSERT INTO meta(key, value) VALUES ('schema_version', '1');
+                 INSERT INTO clips (id, created_at, last_used_at, description, kind, formats, hash, size_bytes, clip_order)
+                 VALUES (7, 1, 1, 'Image 4 × 4', 'image', 'png', 99, 10, 1.0);",
+            )
+            .unwrap();
+            conn.execute("INSERT INTO clip_data (clip_id, format, data) VALUES (7, 'png', ?1)", [blank_png(4, 4)]).unwrap();
+        }
+        for _ in 0..2 {
+            // Opening twice checks the upgrade is idempotent.
+            let s = Store::open(&path).unwrap();
+            assert_eq!(s.summary(7).unwrap().description, "Image 4 × 4");
+            assert_eq!(s.next_image_to_read(&[]).unwrap().map(|j| (j.id, j.hash)), Some((7, 99)));
+        }
+        // An older build still finds the version it expects.
+        let conn = Connection::open(&path).unwrap();
+        let version: String = conn.query_row("SELECT value FROM meta WHERE key = 'schema_version'", [], |r| r.get(0)).unwrap();
+        assert_eq!(version, "1");
     }
 }

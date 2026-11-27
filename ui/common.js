@@ -14,6 +14,25 @@
     root.style.setProperty('--lines', String(settings.lines_per_clip || 2));
   }
 
+  // ---- interface size ----------------------------------------------------------------------
+  // Both windows are zoomed by the app ("Interface size", settings.ui_zoom, in percent).
+
+  const ZOOM_STEPS = [75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300];
+
+  /** The next interface size up (direction > 0) or down from `current`. */
+  function nextZoom(current, direction) {
+    if (direction > 0) return ZOOM_STEPS.find((z) => z > current) || current;
+    return [...ZOOM_STEPS].reverse().find((z) => z < current) || current;
+  }
+
+  /** +1 for ⌘+ / Ctrl++ (also without Shift, on the = key), -1 for ⌘− / Ctrl+−, otherwise 0. */
+  function zoomKey(e) {
+    if (!(isMac ? e.metaKey : e.ctrlKey) || e.altKey) return 0;
+    if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') return 1;
+    if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') return -1;
+    return 0;
+  }
+
   function el(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -155,5 +174,5 @@
     toastTimer = setTimeout(() => { node.hidden = true; }, kind === 'error' ? 4500 : 2200);
   }
 
-  window.Ditto = { T, invoke, listen, isMac, applyAppearance, el, formatBytes, timeAgo, formatDate, acceleratorFromEvent, prettyAccelerator, hotkeyInput, toast };
+  window.Ditto = { T, invoke, listen, isMac, applyAppearance, ZOOM_STEPS, nextZoom, zoomKey, el, formatBytes, timeAgo, formatDate, acceleratorFromEvent, prettyAccelerator, hotkeyInput, toast };
 })();

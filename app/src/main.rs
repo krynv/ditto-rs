@@ -5,6 +5,7 @@ mod capture;
 mod cli;
 mod commands;
 mod hotkeys;
+mod image_text;
 mod paste;
 mod paths;
 mod popup;
@@ -29,7 +30,7 @@ fn main() {
     match cli::parse(&args) {
         // Always start through Tauri: if Ditto-RS is already running, the single-instance
         // plugin forwards these flags to it and this process exits.
-        Ok(Command::Gui { show, options, background, quit }) => run_gui(paths, show || !background, options, quit),
+        Ok(Command::Gui { show, options, background, quit, zoom }) => run_gui(paths, show || !background, options, quit, zoom),
         Ok(cmd) => std::process::exit(cli::run(cmd, &paths)),
         Err(e) => {
             ditto_platform::attach_parent_console();
@@ -54,8 +55,7 @@ fn load_settings(paths: &Paths) -> Settings {
     settings
 }
 
-fn run_gui(paths: Paths, show_on_start: bool, open_options: bool, quit: bool) {
-    log::info!("data folder: {}", paths.data_dir.display());
+fn run_gui(paths: Paths, show_on_start: bool, open_options: bool, quit: bool, zoom: Option<u32>) {
     let settings = load_settings(&paths);
     let store = match Store::open(&paths.db) {
         Ok(s) => s,
@@ -103,6 +103,8 @@ fn run_gui(paths: Paths, show_on_start: bool, open_options: bool, quit: bool) {
             commands::hide_popup,
             commands::open_settings,
             commands::context_menu_opening,
+            commands::image_text_status,
+            commands::set_ui_zoom,
             commands::set_capture_paused,
             commands::toggle_keep_open,
             commands::save_current_clipboard,
@@ -115,12 +117,21 @@ fn run_gui(paths: Paths, show_on_start: bool, open_options: bool, quit: bool) {
                 app.handle().exit(0);
                 return Ok(());
             }
+            // Logged here, not at startup: a second launch that only forwards its arguments to
+            // the running instance never gets this far.
+            log::info!("data folder: {}", app.state::<AppState>().paths.data_dir.display());
             // A tray utility: no Dock icon, no app menu bar on macOS.
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             let handle = app.handle().clone();
             popup::create_popup(&handle)?;
+            if let Some(percent) = zoom {
+                // `--zoom` on the launch that starts the app.
+                if let Err(e) = commands::set_ui_zoom(handle.clone(), percent) {
+                    log::warn!("could not set the interface size: {e}");
+                }
+            }
             tray::create(&handle)?;
             if let Err(e) = hotkeys::init(&handle) {
                 log::error!("global hotkeys are unavailable: {e}");
@@ -128,6 +139,9 @@ fn run_gui(paths: Paths, show_on_start: bool, open_options: bool, quit: bool) {
             hotkeys::register_all(&handle);
             if let Err(e) = capture::start(&handle) {
                 log::error!("clipboard monitoring is unavailable: {e}");
+            }
+            if let Err(e) = image_text::start(&handle) {
+                log::error!("text in images will not be searchable: {e}");
             }
             let settings = handle.state::<AppState>().settings();
             if let Err(e) = commands::apply_autostart(&handle, settings.start_on_login) {

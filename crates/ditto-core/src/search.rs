@@ -14,6 +14,9 @@
 //! quick-paste text; a clip matches when any enabled field matches. A `/q ` (or `\q `)
 //! prefix searches only quick-paste text and `/f ` (or `\f `) only the full text.
 //! Matching is case-insensitive (Unicode-aware, where SQLite's `LIKE` is ASCII-only).
+//!
+//! Not in Ditto: the text recognized in an image clip (OCR) is searched together with the
+//! description and the full text, so a screenshot can be found by the words in it.
 
 use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Serialize};
@@ -59,6 +62,8 @@ pub struct SearchFields<'a> {
     pub description: &'a str,
     pub quick_paste: Option<&'a str>,
     pub full_text: Option<&'a str>,
+    /// Text recognized in an image clip.
+    pub image_text: Option<&'a str>,
 }
 
 #[derive(Debug)]
@@ -134,10 +139,17 @@ impl CompiledSearch {
         self.scopes.full_text
     }
 
+    /// Whether [`SearchFields::image_text`] must be supplied. An image's description is only
+    /// "Image W × H", so its recognized text stands in for both the description and the full text.
+    pub fn needs_image_text(&self) -> bool {
+        self.scopes.description || self.scopes.full_text
+    }
+
     pub fn matches(&self, fields: &SearchFields<'_>) -> bool {
         (self.scopes.description && self.matches_field(fields.description))
             || (self.scopes.quick_paste && fields.quick_paste.is_some_and(|q| self.matches_field(q)))
             || (self.scopes.full_text && fields.full_text.is_some_and(|t| self.matches_field(t)))
+            || (self.needs_image_text() && fields.image_text.is_some_and(|t| self.matches_field(t)))
     }
 
     /// Evaluate the query against a single string.
@@ -304,7 +316,12 @@ mod tests {
 
     #[test]
     fn scopes_and_prefixes() {
-        let fields = SearchFields { description: "short desc", quick_paste: Some("sig"), full_text: Some("short desc and a long tail") };
+        let fields = SearchFields {
+            description: "short desc",
+            quick_paste: Some("sig"),
+            full_text: Some("short desc and a long tail"),
+            image_text: None,
+        };
         assert!(search("desc", SearchMode::Wildcard).matches(&fields));
         assert!(!search("tail", SearchMode::Wildcard).matches(&fields));
         assert!(search("/f tail", SearchMode::Wildcard).matches(&fields));
@@ -324,5 +341,24 @@ mod tests {
         // A missing field never matches, even for negated terms (SQL NULL semantics).
         let no_qp = SearchFields { quick_paste: None, ..fields };
         assert!(!search("/q NOT zzz", SearchMode::Wildcard).matches(&no_qp));
+    }
+
+    #[test]
+    fn image_text_is_searched_with_the_description_and_the_full_text() {
+        let image = SearchFields { description: "Image 640 × 480", image_text: Some("Invoice 48213\nTotal due"), ..Default::default() };
+        // The default scope (description only) finds an image by the words in it.
+        assert!(search("invoice", SearchMode::Wildcard).matches(&image));
+        assert!(search("48213 total", SearchMode::Wildcard).matches(&image));
+        assert!(search("/f total due", SearchMode::Wildcard).matches(&image));
+        assert!(search("invoice.*due", SearchMode::Regex).matches(&SearchFields { image_text: Some("Invoice 48213 Total due"), ..image }));
+        assert!(!search("receipt", SearchMode::Wildcard).matches(&image));
+        // Quick-paste-only searches ignore it.
+        let quick = search("/q invoice", SearchMode::Wildcard);
+        assert!(!quick.needs_image_text());
+        assert!(!quick.matches(&image));
+        // An image that has not been read yet only matches on its description.
+        let unread = SearchFields { image_text: None, ..image };
+        assert!(!search("invoice", SearchMode::Wildcard).matches(&unread));
+        assert!(search("640", SearchMode::Wildcard).matches(&unread));
     }
 }

@@ -21,10 +21,12 @@ GUI OPTIONS:
     --options           Open the options window
     --background        Start hidden in the tray (used when starting on login)
     --quit              Ask a running instance to exit
+    --zoom <PERCENT>    Set the interface size, 50 to 300 (100 is normal)
 
 COMMANDS (no GUI):
     --list [N] [TEXT]   Print the N most recent clips (default 20), optionally filtered
     --import <FILE>     Import a Ditto database (Ditto.db) into the history
+    --ocr <IMAGE>       Print the text found in a PNG or BMP image (what search sees for an image clip)
     --paths             Print where the history and settings are stored
     -V, --version       Print the version
     -h, --help          Print this help
@@ -38,16 +40,18 @@ shortcut in your desktop's keyboard settings instead.";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
-    Gui { show: bool, options: bool, background: bool, quit: bool },
+    Gui { show: bool, options: bool, background: bool, quit: bool, zoom: Option<u32> },
     Help,
     Version,
     List { limit: usize, query: Option<String> },
     Import(PathBuf),
+    Ocr(PathBuf),
     Paths,
 }
 
 pub fn parse(args: &[String]) -> Result<Command, String> {
     let (mut show, mut options, mut background, mut quit) = (false, false, false, false);
+    let mut zoom = None;
     let mut it = args.iter();
     while let Some(arg) = it.next() {
         match arg.as_str() {
@@ -57,6 +61,10 @@ pub fn parse(args: &[String]) -> Result<Command, String> {
             "--import" => {
                 let path = it.next().ok_or("--import needs the path of a Ditto.db file")?;
                 return Ok(Command::Import(PathBuf::from(path)));
+            }
+            "--ocr" => {
+                let path = it.next().ok_or("--ocr needs the path of a PNG or BMP image")?;
+                return Ok(Command::Ocr(PathBuf::from(path)));
             }
             "--list" => {
                 let mut limit = 20;
@@ -73,12 +81,19 @@ pub fn parse(args: &[String]) -> Result<Command, String> {
             "--options" => options = true,
             "--background" | "--minimized" => background = true,
             "--quit" => quit = true,
+            "--zoom" => {
+                let range = ditto_core::settings::UI_ZOOM_RANGE;
+                let usage = format!("--zoom needs a percentage from {} to {}, such as --zoom 150", range.start(), range.end());
+                let value = it.next().ok_or(usage.clone())?;
+                let percent = value.trim_end_matches('%').parse::<u32>().ok().filter(|p| range.contains(p)).ok_or(usage)?;
+                zoom = Some(percent);
+            }
             // macOS adds a process serial number when launched from Finder.
             other if other.starts_with("-psn_") => {}
             other => return Err(format!("unknown argument: {other}\n\n{USAGE}")),
         }
     }
-    Ok(Command::Gui { show, options, background, quit })
+    Ok(Command::Gui { show, options, background, quit, zoom })
 }
 
 /// Run a non-GUI command; returns the process exit code.
@@ -128,8 +143,37 @@ pub fn run(cmd: Command, paths: &Paths) -> i32 {
                 }
             }
         }
+        Command::Ocr(file) => {
+            let status = ditto_platform::ocr::status();
+            eprintln!("engine: {} ({})", status.engine, status.detail);
+            if !status.available {
+                return 1;
+            }
+            match read_image_text(&file) {
+                Ok(text) => {
+                    println!("{text}");
+                    0
+                }
+                Err(e) => {
+                    eprintln!("error: {e}");
+                    1
+                }
+            }
+        }
         Command::Gui { .. } => 0,
     }
+}
+
+/// The text in an image file, recognized the same way as for an image clip.
+fn read_image_text(file: &std::path::Path) -> Result<String, String> {
+    let bytes = std::fs::read(file).map_err(|e| format!("cannot read {}: {e}", file.display()))?;
+    // Image clips are stored as PNG; convert anything else the same way a copy would be.
+    let png = if ditto_core::model::png_dimensions(&bytes).is_some() {
+        bytes
+    } else {
+        ditto_core::imaging::decode(&bytes).and_then(|image| ditto_core::imaging::encode_png(&image)).map_err(|e| e.to_string())?
+    };
+    ditto_platform::ocr::recognize_png(&png).map_err(|e| e.to_string())
 }
 
 fn list(paths: &Paths, limit: usize, query: Option<&str>) -> Result<(), String> {
@@ -161,12 +205,23 @@ fn list(paths: &Paths, limit: usize, query: Option<&str>) -> Result<(), String> 
 pub fn handle_forwarded(app: &AppHandle, argv: &[String]) {
     let command = parse(argv.get(1..).unwrap_or_default());
     let handle = app.clone();
-    let result = app.run_on_main_thread(move || match command {
-        Ok(Command::Gui { quit: true, .. }) => handle.exit(0),
-        Ok(Command::Gui { options: true, .. }) => popup::open_settings(&handle),
-        // Launching Ditto again (or `--show`) opens the quick-paste window.
-        Ok(Command::Gui { background: false, .. }) => popup::show(&handle),
-        _ => {}
+    let result = app.run_on_main_thread(move || {
+        let Ok(Command::Gui { options, background, quit, zoom, .. }) = command else { return };
+        if quit {
+            handle.exit(0);
+            return;
+        }
+        if let Some(percent) = zoom {
+            if let Err(e) = crate::commands::set_ui_zoom(handle.clone(), percent) {
+                log::warn!("could not set the interface size: {e}");
+            }
+        }
+        if options {
+            popup::open_settings(&handle);
+        } else if !background {
+            // Launching Ditto again (or `--show`) opens the quick-paste window.
+            popup::show(&handle);
+        }
     });
     if let Err(e) = result {
         log::warn!("could not handle a second launch: {e}");
@@ -183,12 +238,20 @@ mod tests {
 
     #[test]
     fn parses_arguments() {
-        assert_eq!(p(&[]).unwrap(), Command::Gui { show: false, options: false, background: false, quit: false });
-        assert_eq!(p(&["--show", "-psn_0_123"]).unwrap(), Command::Gui { show: true, options: false, background: false, quit: false });
+        let gui = Command::Gui { show: false, options: false, background: false, quit: false, zoom: None };
+        assert_eq!(p(&[]).unwrap(), gui);
+        assert_eq!(p(&["--show", "-psn_0_123"]).unwrap(), Command::Gui { show: true, options: false, background: false, quit: false, zoom: None });
+        assert_eq!(p(&["--background", "--zoom", "150"]).unwrap(), Command::Gui { show: false, options: false, background: true, quit: false, zoom: Some(150) });
+        assert_eq!(p(&["--zoom", "125%"]).unwrap(), Command::Gui { show: false, options: false, background: false, quit: false, zoom: Some(125) });
+        for bad in [&["--zoom"][..], &["--zoom", "big"], &["--zoom", "20"], &["--zoom", "1000"]] {
+            assert!(p(bad).unwrap_err().contains("--zoom needs a percentage"), "{bad:?}");
+        }
         assert_eq!(p(&["--list"]).unwrap(), Command::List { limit: 20, query: None });
         assert_eq!(p(&["--list", "5", "foo", "bar"]).unwrap(), Command::List { limit: 5, query: Some("foo bar".into()) });
         assert_eq!(p(&["--import", "/x/Ditto.db"]).unwrap(), Command::Import("/x/Ditto.db".into()));
         assert!(p(&["--import"]).is_err());
+        assert_eq!(p(&["--ocr", "shot.png"]).unwrap(), Command::Ocr("shot.png".into()));
+        assert!(p(&["--ocr"]).is_err());
         assert!(p(&["--bogus"]).is_err());
         assert_eq!(p(&["--help", "--bogus"]).unwrap(), Command::Help);
     }
