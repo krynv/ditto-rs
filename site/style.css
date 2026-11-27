@@ -193,7 +193,7 @@ h1 { font-size: clamp(2.6rem, 1.5rem + 4.4vw, 4.7rem); font-weight: 820; letter-
 .demo-toast { position: absolute; left: 50%; bottom: 1.2rem; transform: translateX(-50%); max-width: calc(100% - 2rem); padding: 0.6rem 1rem; border-radius: 12px; background: rgba(12, 10, 40, 0.92); color: #fff; font-size: 1rem; font-weight: 600; text-align: center; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
 .demo-toast.show { opacity: 1; }
 
-.demo-steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; }
+.demo-steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); gap: 1rem; }
 .demo-steps li { counter-increment: step; padding: 1.1rem 1.2rem; background: var(--card); border: 1px solid var(--border); border-radius: 16px; font-size: 1.05rem; line-height: 1.55; }
 .demo-steps li::before { content: counter(step); display: grid; place-items: center; width: 2rem; height: 2rem; margin-bottom: 0.6rem; border-radius: 50%; background: var(--accent); color: var(--accent-text); font-weight: 750; font-size: 1rem; }
 .demo-steps strong { display: block; margin-bottom: 0.15rem; }
@@ -213,7 +213,7 @@ h1 { font-size: clamp(2.6rem, 1.5rem + 4.4vw, 4.7rem); font-weight: 820; letter-
 
 /* ---- features ---------------------------------------------------------------------------- */
 
-.features { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 1.2rem; }
+.features { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: 1.2rem; }
 .features li { padding: 1.6rem; background: var(--card); border: 1px solid var(--border); border-radius: 20px; }
 .features p { margin-top: 0.6rem; color: var(--muted); }
 .icon { width: 2.9rem; height: 2.9rem; padding: 0.62rem; margin-bottom: 1.1rem; border-radius: 13px; background: var(--accent); color: var(--accent-text); fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
@@ -239,7 +239,7 @@ h1 { font-size: clamp(2.6rem, 1.5rem + 4.4vw, 4.7rem); font-weight: 820; letter-
 
 /* ---- downloads --------------------------------------------------------------------------- */
 
-.downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr)); gap: 1.2rem; }
+.downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(17.5rem, 100%), 1fr)); gap: 1.2rem; }
 .os { display: flex; flex-direction: column; padding: 1.6rem; background: var(--card); border: 2px solid var(--border); border-radius: 20px; }
 .os.yours { border-color: var(--accent); box-shadow: var(--shadow); }
 .os h3 { font-size: 1.6rem; }

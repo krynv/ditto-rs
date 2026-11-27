@@ -178,11 +178,15 @@
 
   const enabledButtons = (list) => [...list.querySelectorAll('button:not([aria-disabled="true"])')];
 
+  let menuIds = 0;
+
   function openLevel(items, x, y, parent) {
     const level = menus.length;
     const list = document.createElement('ul');
     list.className = 'demo-menu';
     list.setAttribute('role', 'menu');
+    list.id = `demo-menu-${++menuIds}`;
+    if (parent) parent.setAttribute('aria-controls', list.id);
     for (const item of items) {
       const row = document.createElement('li');
       if (item.item === 'Separator') {
