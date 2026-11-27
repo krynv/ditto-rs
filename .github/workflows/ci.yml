@@ -31,6 +31,10 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
+      # Passing tests hide their output, so say here which engine this system used and what it read.
+      - name: Text recognition report
+        run: cargo test -p ditto-platform ocr -- --nocapture --test-threads=1
+
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 

@@ -130,7 +130,8 @@ mod tests {
     }
 
     /// Runs the real engine. Where there is none (no OCR language on Windows, no Tesseract on
-    /// Linux, or a CI machine whose engine cannot run) the test reports that and passes.
+    /// Linux) the test reports that and passes. So does a failure on a macOS CI machine: those
+    /// are virtual machines, where Vision may have no device to run its model on.
     #[test]
     fn recognizes_the_sample_image() {
         let status = status();
@@ -141,8 +142,8 @@ mod tests {
         }
         let text = match recognize_png(SAMPLE) {
             Ok(text) => text,
-            Err(e) if std::env::var_os("CI").is_some() => {
-                eprintln!("skipped: the engine failed on this CI machine: {e}");
+            Err(e) if cfg!(target_os = "macos") && std::env::var_os("CI").is_some() => {
+                eprintln!("skipped: Vision failed on this CI machine: {e}");
                 return;
             }
             Err(e) => panic!("recognition failed: {e}"),
