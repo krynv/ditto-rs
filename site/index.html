@@ -138,7 +138,7 @@ Select anything here and copy it. It joins your clipboard history.
       </div>
     </section>
 
-    <section class="section tinted" id="features" aria-labelledby="features-title">
+    <section class="section tour" id="features" aria-labelledby="features-title">
       <div class="wrap">
         <div class="section-head">
           <h2 id="features-title">What it does</h2>
@@ -148,70 +148,152 @@ Select anything here and copy it. It joins your clipboard history.
           </p>
         </div>
 
-        <ul class="features">
-          <li>
-            <h3>It keeps everything you copy</h3>
-            <p>Text, formatted text, pictures and lists of files, saved in a history on your own disk. Copy the same thing again and it moves back to the top.</p>
-          </li>
-          <li>
-            <h3>You find things by typing</h3>
-            <p>Start typing and the list narrows. It finds pictures too, by the words in them. Words are combined, and you can add <code>OR</code>, <code>NOT</code>, <code>"exact phrases"</code>, wildcards or regular expressions.</p>
-          </li>
-          <li>
-            <h3>It pastes where you were</h3>
-            <p>Pick a clip and Ditto-RS returns to the app you came from and pastes for you. <kbd>Shift</kbd>&nbsp;+&nbsp;<kbd>Enter</kbd> pastes plain text. <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>1</kbd> to <kbd>0</kbd> paste the ten newest clips.</p>
-          </li>
-          <li>
-            <h3>Special Paste</h3>
-            <p>Paste in UPPER CASE or lower case, trimmed, on one line, as a web-address slug, or with the time added. Select several clips and paste them together.</p>
-          </li>
-          <li>
-            <h3>Keep what matters</h3>
-            <p>Pin clips to the top, sort them into groups, give them names, and give your favourites their own hotkey that works anywhere.</p>
-          </li>
-          <li>
-            <h3>Private by design</h3>
-            <p>Your history never leaves your computer: no account, no sync, no telemetry. Copies that password managers mark as secret are skipped, and you can exclude any app.</p>
-          </li>
-        </ul>
+        <!-- A tour of the app. On a wide screen the scene on the right stays in view while the
+             steps scroll past it, and changes with them (site.js); otherwise each step shows
+             its own picture. -->
+        <div class="tour-body" id="tour">
+          <ol class="tour-steps">
+            <li class="tour-step">
+              <div class="tour-words">
+                <h3>It keeps everything you copy</h3>
+                <p>Text, pictures and files, saved on your own disk and nowhere else. Copy the same thing again and it moves back to the top.</p>
+              </div>
+              <figure class="tour-still">
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="shots/tour-list-dark.webp">
+                  <img src="shots/tour-list-light.webp" width="1050" height="1200" loading="lazy"
+                       alt="The quick-paste window: a numbered list of recent clips, with a web address, a signature, a picture of a train ticket, a code snippet and two files.">
+                </picture>
+              </figure>
+            </li>
+            <li class="tour-step">
+              <div class="tour-words">
+                <h3>You find things by typing</h3>
+                <p>Start typing and the list narrows. Add <code>OR</code>, <code>NOT</code>, <code>"exact phrases"</code>, wildcards or regular expressions when you need them.</p>
+              </div>
+              <figure class="tour-still">
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="shots/tour-find-dark.webp">
+                  <img src="shots/tour-find-light.webp" width="1050" height="1200" loading="lazy"
+                       alt="The list narrowed to three clips after typing alex: a signature, two files and an email address.">
+                </picture>
+              </figure>
+            </li>
+            <li class="tour-step">
+              <div class="tour-words">
+                <h3>It reads the words in pictures</h3>
+                <p>A picture turns up when you type a word that is in it. The reading happens on your computer.</p>
+              </div>
+              <figure class="tour-still">
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="shots/tour-picture-dark.webp">
+                  <img src="shots/tour-picture-light.webp" width="1050" height="1200" loading="lazy"
+                       alt="The list narrowed to one clip, the picture of a train ticket, after typing edinburgh.">
+                </picture>
+              </figure>
+            </li>
+            <li class="tour-step">
+              <div class="tour-words">
+                <h3>You look before you paste</h3>
+                <p><kbd>F3</kbd> shows the whole clip: the full text, the picture at full size, or the list of files.</p>
+              </div>
+              <figure class="tour-still">
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="shots/tour-preview-dark.webp">
+                  <img src="shots/tour-preview-light.webp" width="1050" height="1200" loading="lazy"
+                       alt="The preview panel showing the train ticket at full size, with tabs for Image, Text in Image and Info.">
+                </picture>
+              </figure>
+            </li>
+            <li class="tour-step">
+              <div class="tour-words">
+                <h3>It pastes where you were</h3>
+                <p><kbd>Enter</kbd> puts the clip into the app you came from. Special Paste changes it on the way: UPPER CASE, trimmed, or as a web-address slug.</p>
+              </div>
+            </li>
+            <li class="tour-step">
+              <div class="tour-words">
+                <h3>You keep what matters</h3>
+                <p>Pin clips to the top, sort them into groups, and give your favourites their own hotkey.</p>
+              </div>
+              <figure class="tour-still">
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="shots/tour-organise-dark.webp">
+                  <img src="shots/tour-organise-light.webp" width="1050" height="1200" loading="lazy"
+                       alt="The list with a pinned signature at the top, two clips marked as being in a group, and one with its own hotkey.">
+                </picture>
+              </figure>
+            </li>
+            <li class="tour-step">
+              <div class="tour-words">
+                <h3>You make it yours</h3>
+                <p>Light and dark themes, your own hotkeys, and an interface size up to 300&nbsp;% when the text is too small.</p>
+              </div>
+              <figure class="tour-still">
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="shots/tour-options-dark.webp">
+                  <img src="shots/tour-options-light.webp" width="1520" height="1240" loading="lazy"
+                       alt="The Options window on its Quick Paste page, with the theme, the interface size and the clip text size.">
+                </picture>
+              </figure>
+            </li>
+          </ol>
+
+          <div class="tour-stage" aria-hidden="true">
+            <div class="tour-pin">
+              <ol class="tour-rail"><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li></ol>
+              <div class="tour-scene">
+                <div class="tour-note">
+                  <div class="tour-note-bar"><span class="demo-dots"><i></i><i></i><i></i></span><span>Notes</span></div>
+                  <div class="tour-note-text">
+                    <p>Shopping list for Saturday</p>
+                    <p>- Sourdough from the bakery on Mill Road<br>- Two lemons, flat-leaf parsley, good olive oil<br>- Call the plumber: 020 7946 0321</p>
+                    <p class="tour-pasted"><span>Order 4471-2208 arrives Saturday</span><span>ORDER 4471-2208 ARRIVES SATURDAY</span><span>order-4471-2208-arrives-saturday</span></p>
+                    <p class="tour-how"><span><kbd>Enter</kbd></span><span>Special Paste: UPPER CASE</span><span>Special Paste: Slugify</span></p>
+                  </div>
+                </div>
+                <div class="tour-app">
+                  <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-list-dark.webp">
+                    <img src="shots/tour-list-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-find-dark.webp">
+                    <img src="shots/tour-find-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-picture-dark.webp">
+                    <img src="shots/tour-picture-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-preview-dark.webp">
+                    <img src="shots/tour-preview-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-organise-dark.webp">
+                    <img src="shots/tour-organise-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                </div>
+                <div class="tour-options">
+                  <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-options-dark.webp">
+                    <img src="shots/tour-options-light.webp" width="1520" height="1240" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture class="tour-other">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-options-light.webp">
+                    <img src="shots/tour-options-dark.webp" width="1520" height="1240" alt="" loading="lazy" decoding="async">
+                  </picture>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="callout" aria-labelledby="ditto-title">
+          <h3 id="ditto-title">Moving from Ditto on Windows?</h3>
+          <p>Bring your history with you. <strong>Options → Database → Import Ditto Database</strong> reads your <code>Ditto.db</code> and brings over your clips, groups, sticky clips, quick-paste text and hotkeys.</p>
+        </aside>
       </div>
-    </section>
-
-    <section class="section wrap" aria-labelledby="look-title">
-      <h2 class="visually-hidden" id="look-title">A closer look</h2>
-
-      <div class="showcase">
-        <div class="showcase-text">
-          <h3>See a clip before you paste it</h3>
-          <p>Press <kbd>F3</kbd> to look at the whole clip: the full text, the formatted version, the picture at full size, or the list of files, with where and when you copied it.</p>
-        </div>
-        <div class="stage">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="shots/preview-dark.webp">
-            <img src="shots/preview-light.webp" width="1050" height="1000" loading="lazy"
-                 alt="The preview panel showing a copied picture of a train ticket at full size, with tabs for Image and Info.">
-          </picture>
-        </div>
-      </div>
-
-      <div class="showcase flip">
-        <div class="showcase-text">
-          <h3>Make it yours</h3>
-          <p>Light and dark themes, your own hotkeys, how much history to keep and for how long, which apps to ignore, and where the window opens. Text too small? Turn up the interface size and everything grows at once, up to 300&nbsp;%. Sensible defaults, taken from Ditto, so you can leave it all alone.</p>
-        </div>
-        <div class="stage wide">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="shots/options-dark.webp">
-            <img src="shots/options-light.webp" width="1520" height="1240" loading="lazy"
-                 alt="The Options window on its General page, with settings for start-up, history size, supported types and applications.">
-          </picture>
-        </div>
-      </div>
-
-      <aside class="callout" aria-labelledby="ditto-title">
-        <h3 id="ditto-title">Moving from Ditto on Windows?</h3>
-        <p>Bring your history with you. <strong>Options → Database → Import Ditto Database</strong> reads your <code>Ditto.db</code> and brings over your clips, groups, sticky clips, quick-paste text and hotkeys.</p>
-      </aside>
     </section>
 
     <section class="section tinted" aria-labelledby="keys-title">

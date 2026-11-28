@@ -79,6 +79,101 @@
     .then(showRelease)
     .catch(() => {});
 
+  // ---- the tour -----------------------------------------------------------------------------
+  // On a wide screen, with motion allowed, the tour's scene stays in view while its steps scroll
+  // past, and changes with them. The scene does not jump to where the page has scrolled to: it
+  // eases toward it, so it moves smoothly however the scrolling arrives (a wheel, a trackpad,
+  // the keyboard). Otherwise each step shows its own picture, which is also what the page does
+  // without this script. The styles that read these values are under "tour" in style.css.
+
+  const tour = document.querySelector('.tour');
+  if (tour) {
+    const steps = [...tour.querySelectorAll('.tour-step')];
+    const stage = tour.querySelector('.tour-stage');
+    const rail = [...tour.querySelectorAll('.tour-rail li')];
+    const wide = matchMedia('(min-width: 60rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference)');
+    const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+    let target = 0; // where the page has scrolled to, counted in steps: 2.5 is half-way from the third to the fourth
+    let shown = -1; // where the scene is
+    let step = -1;
+    let frame = 0;
+    let last = 0;
+    let later = 0;
+
+    // What follows the scrolling itself: the drift of the windows, and the sweep of the theme.
+    function paint(at) {
+      stage.style.setProperty('--p', (at / (steps.length - 1)).toFixed(4));
+      stage.style.setProperty('--wipe', ease((at - 5.55) / 0.42).toFixed(4));
+      // While the note is in front, the paste is shown three ways in turn.
+      const way = at < 3.85 ? '0' : at < 4.15 ? '1' : '2';
+      if (stage.dataset.paste !== way) stage.dataset.paste = way;
+    }
+
+    // What changes from one step to the next. These are switches: the styles ease them.
+    function show(now) {
+      if (now === step) return;
+      step = now;
+      const set = (name, on) => stage.style.setProperty(name, on ? 1 : 0);
+      set('--t1', now >= 1);
+      set('--t2', now >= 2);
+      set('--t3', now >= 3);
+      set('--paste', now === 4);
+      set('--landed', now >= 4);
+      set('--t6', now >= 6);
+      // The window comes back from the paste showing its next state, and when the tour is
+      // scrolled backwards it keeps that state until it has faded out again.
+      clearTimeout(later);
+      if (now >= 5) stage.style.setProperty('--later', 1);
+      else later = setTimeout(() => stage.style.setProperty('--later', 0), now === 4 ? 700 : 0);
+      stage.dataset.step = now;
+      rail.forEach((item, index) => item.classList.toggle('now', index === now));
+    }
+
+    function tick(time) {
+      frame = 0;
+      const passed = Math.min(64, Math.max(1, time - last));
+      last = time;
+      shown += (target - shown) * (1 - Math.exp(-passed / 110));
+      if (Math.abs(target - shown) < 0.0008) shown = target;
+      else frame = requestAnimationFrame(tick);
+      paint(shown);
+    }
+
+    function measure() {
+      if (!tour.classList.contains('is-live')) return;
+      const box = tour.getBoundingClientRect();
+      if (box.bottom < -innerHeight || box.top > 2 * innerHeight) return;
+      const middle = innerHeight / 2;
+      const centres = steps.map((step) => {
+        const b = step.getBoundingClientRect();
+        return b.top + b.height / 2;
+      });
+      const next = centres.findIndex((centre) => centre > middle); // the first step still below the middle
+      if (next === 0) target = 0;
+      else if (next < 0) target = steps.length - 1;
+      else target = next - 1 + (middle - centres[next - 1]) / (centres[next] - centres[next - 1]);
+      show(Math.round(target));
+      if (shown < 0) {
+        shown = target;
+        paint(shown);
+      } else if (!frame) {
+        last = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+    }
+
+    function arrange() {
+      tour.classList.toggle('is-live', wide.matches);
+      shown = -1;
+      step = -1;
+      measure();
+    }
+    wide.addEventListener('change', arrange);
+    addEventListener('scroll', measure, { passive: true });
+    addEventListener('resize', measure);
+    arrange();
+  }
+
   // ---- the live demo ------------------------------------------------------------------------
   // demo/ui/ is the app's own quick-paste page; demo/mock.js stands in for its backend and
   // calls the functions in `window.DittoDemo` below.

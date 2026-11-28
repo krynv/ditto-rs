@@ -11,7 +11,7 @@
   --hover: #e4e7ec;
   --desk: #dfe2e8;
   --text: #1c1e22;
-  --text-2: #454952;
+  --text-2: #42464f;
   --text-3: #5b606a;
   --line: rgba(28, 30, 34, 0.12);
   --edge: rgba(28, 30, 34, 0.32);
@@ -168,7 +168,7 @@ kbd {
 .cta-note { margin-top: 1rem; max-width: 34rem; font-size: 1rem; line-height: 1.5; color: var(--text-2); font-variant-numeric: tabular-nums; }
 
 .hero-shot { width: min(100%, 26.25rem); }
-.hero-shot img, .stage img { border-radius: var(--r-card); box-shadow: var(--lift); }
+.hero-shot img, .tour-still img { border-radius: var(--r-card); box-shadow: var(--lift); }
 
 /* ---- sections ---------------------------------------------------------------------------- */
 
@@ -220,17 +220,95 @@ kbd {
 .demo-menu .rule { height: 1px; margin: 0.25rem 0.5rem; background: var(--line); }
 .demo-menu-backdrop { position: fixed; inset: 0; z-index: 59; }
 
-/* ---- features ---------------------------------------------------------------------------- */
+/* ---- tour -------------------------------------------------------------------------------- */
 
-.features { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.5rem 3rem; }
-.features li { padding-top: 1.5rem; border-top: 1px solid var(--line); }
-.features p { margin-top: 0.5rem; color: var(--text-2); }
+/* A tour of the app, on the desk. As plain as it gets, each step is its words and its own
+   picture, which is how it shows on small screens, without the script, and for readers who
+   ask for less motion. */
+.tour { background: var(--desk); overflow-x: clip; }
+.tour-steps { margin: 0; padding: 0; list-style: none; counter-reset: tour; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4rem; }
+.tour-step { counter-increment: tour; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; gap: 1.5rem 3rem; }
+/* The steps are numbered the way the app numbers its clips. */
+.tour-words::before { content: counter(tour); display: block; margin-bottom: 0.5rem; font: 500 1rem/1.5 var(--mono); color: var(--text-2); }
+.tour-words p { margin-top: 0.5rem; max-width: 34rem; color: var(--text-2); }
+.tour-words code { white-space: nowrap; }
+.tour-still { margin: 0; }
+.tour-still img { width: min(100%, 26.25rem); }
+.tour-stage { display: none; }
+.tour .callout { margin-top: 4rem; }
 
-.showcase { display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; gap: 2rem; margin-bottom: 4rem; }
-.showcase-text p { margin-top: 0.75rem; color: var(--text-2); }
-.stage { display: grid; place-items: center; padding: 1.5rem; border-radius: var(--r-panel); background: var(--desk); }
-.stage img { width: min(100%, 26.25rem); }
-.stage.wide img { width: min(100%, 40rem); }
+/* On a wide screen with motion allowed, site.js adds .is-live. The steps then scroll past a
+   scene that stays in view, and the script sets these on the stage:
+     --p, --wipe            how far through the tour, and through the change of theme: 0 to 1,
+                            following the scrolling
+     --t1 --t2 --t3 --t6    each change of scene: 0 before it, 1 after
+     --paste                1 while the clip is pasted into the note, 0 before and after
+     --landed --later       1 once the paste has landed, and once it is over
+   The second group are switches. They are registered as numbers so that a transition can run
+   on them: a change of scene then plays through smoothly, wherever the scrolling stops. */
+@property --t1 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --t2 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --t3 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --t6 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --paste { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --landed { syntax: "<number>"; inherits: true; initial-value: 0; }
+.tour-stage { --p: 0; --wipe: 0; --later: 0; --glide: cubic-bezier(0.22, 1, 0.36, 1);
+  transition: --t1 0.45s var(--glide), --t2 0.45s var(--glide), --t3 0.45s var(--glide), --t6 0.7s var(--glide), --paste 0.7s var(--glide), --landed 0.3s ease 0.3s; }
+.tour.is-live .tour-body { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); column-gap: 4rem; }
+/* Room above and below, so the scene is in place for the first step and stays through the last. */
+.tour.is-live .tour-steps { display: block; padding-block: 8svh 16svh; }
+.tour.is-live .tour-step { grid-template-columns: minmax(0, 1fr); align-content: center; min-height: 85svh; }
+.tour.is-live .tour-words h3 { font-size: 2rem; line-height: 1.15; letter-spacing: -0.01em; }
+.tour.is-live .tour-words p { margin-top: 0.75rem; font-size: 1.25rem; line-height: 1.6; }
+/* The scene shows the pictures now; the steps keep theirs for screen readers. */
+.tour.is-live .tour-still { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+.tour.is-live .tour-stage { display: block; }
+.tour-pin { position: sticky; top: 0; display: grid; place-items: center; height: 100vh; height: 100svh; }
+
+/* Which step the scene is on: the app's own way of marking the selected clip. */
+.tour-rail { position: absolute; left: -3rem; top: 50%; translate: 0 -50%; display: grid; gap: 0.25rem; margin: 0; padding: 0; list-style: none; font: 500 1rem/1.5 var(--mono); color: var(--text-2); }
+.tour-rail li { padding: 0.25rem 0.75rem; border-left: 2px solid transparent; opacity: 0.5; transition: opacity var(--quick), border-color var(--quick); }
+.tour-rail li.now { border-left-color: var(--accent); opacity: 1; color: var(--text); }
+
+/* The scene is drawn in units of its own width (cqw), so it keeps its proportions at any
+   size: the note you were writing, the Ditto-RS window over it, and later the Options window.
+   Each is at its own depth and drifts at its own rate as the tour goes by. */
+.tour-scene { position: relative; width: min(100%, 46rem, calc((100svh - 6rem) * 1.0667)); aspect-ratio: 16 / 15; container-type: inline-size; scale: calc(0.97 + var(--p) * 0.06); }
+.tour-note, .tour-app, .tour-options { position: absolute; overflow: hidden; border-radius: 1.9cqw; background: var(--card); box-shadow: var(--lift); will-change: translate, scale, opacity; }
+
+.tour-note { left: 0; top: 3cqw; width: 73cqw; height: 52cqw; color: var(--text); font-size: 2.6cqw; line-height: 1.5;
+  translate: calc(var(--paste) * 13cqw) calc((0.5 - var(--p)) * 6cqw + var(--paste) * 17cqw);
+  scale: calc(1 + var(--paste) * 0.12 - var(--t6) * 0.04); }
+.tour-note-bar { display: flex; align-items: center; gap: 1.6cqw; height: 6cqw; padding: 0 2cqw; background: var(--band); color: var(--text-2); font-size: 2.3cqw; font-weight: 500; }
+.tour-note-bar .demo-dots { gap: 1cqw; }
+.tour-note-bar .demo-dots i { width: 1.7cqw; height: 1.7cqw; }
+.tour-note-text { padding: 2.5cqw 3cqw; }
+.tour-note-text p + p { margin-top: 1.5em; }
+/* The pasted line, and under it how it was pasted. One of three is shown at a time. */
+.tour-pasted, .tour-how { display: grid; justify-items: start; opacity: var(--landed); }
+.tour-pasted span, .tour-how span { grid-area: 1 / 1; opacity: 0; transition: opacity 0.2s; }
+.tour-pasted span { padding: 0 0.8cqw; margin-left: -0.8cqw; border-radius: 0.8cqw; background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.tour-note-text .tour-how { margin-top: 0.6em; color: var(--text-2); font: 500 2.1cqw/1.6 var(--mono); }
+.tour-how kbd { font-size: 0.95em; }
+.tour-stage[data-paste="0"] :is(.tour-pasted, .tour-how) span:nth-child(1),
+.tour-stage[data-paste="1"] :is(.tour-pasted, .tour-how) span:nth-child(2),
+.tour-stage[data-paste="2"] :is(.tour-pasted, .tour-how) span:nth-child(3) { opacity: 1; }
+
+.tour-app { left: 31cqw; top: 10cqw; width: 69cqw; aspect-ratio: 420 / 480; opacity: calc(1 - var(--paste));
+  translate: 0 calc((0.5 - var(--p)) * 14cqw + var(--paste) * 4cqw);
+  scale: calc(1 - var(--paste) * 0.06 - var(--t6) * 0.04); }
+.tour-options { left: 1.5cqw; top: 9cqw; width: 97cqw; aspect-ratio: 760 / 620; opacity: var(--t6);
+  translate: calc((1 - var(--t6)) * 8cqw) calc((1 - var(--t6)) * 5cqw); }
+.tour-app picture, .tour-options picture { position: absolute; inset: 0; }
+.tour-app img, .tour-options img { width: 100%; height: 100%; }
+/* The same window, changing: each state fades in over the one before. */
+.tour-app picture:nth-child(2) { opacity: var(--t1); }
+.tour-app picture:nth-child(3) { opacity: var(--t2); }
+.tour-app picture:nth-child(4) { opacity: var(--t3); }
+.tour-app picture:nth-child(5) { opacity: var(--later); }
+/* The other theme sweeps across the Options window, behind a thin line. */
+.tour-other { clip-path: inset(0 calc((1 - var(--wipe)) * 100%) 0 0); }
+.tour-options::after { content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--wipe) * 100% - 1px); width: 2px; background: var(--accent); opacity: calc(4 * var(--wipe) * (1 - var(--wipe))); }
 
 .callout { padding: 1.5rem; border-radius: var(--r-card); background: var(--card); box-shadow: 0 0 0 1px var(--line); }
 .callout p { margin-top: 0.5rem; max-width: 52rem; color: var(--text-2); }
@@ -279,7 +357,8 @@ details p { margin-top: 0.25rem; color: var(--text-2); }
   .wrap { width: min(100% - 4rem, 72rem); }
   .wrap.narrow { width: min(100% - 4rem, 50rem); }
   h1 { font-size: 3.5rem; line-height: 1.06; letter-spacing: -0.02em; }
-  .features, .demo-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .demo-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tour-step:has(.tour-still) { grid-template-columns: minmax(0, 1fr) minmax(0, 22rem); }
   .callout { padding: 2rem; }
 }
 
@@ -302,16 +381,9 @@ details p { margin-top: 0.25rem; color: var(--text-2); }
   .demo-toast { position: absolute; left: 50%; bottom: 1.5rem; transform: translateX(-50%); max-width: calc(100% - 4rem); }
   .demo-toast:not(.show) { display: block; }
 
-  .showcase { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 4rem; margin-bottom: 6rem; }
-  .showcase.flip { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); }
-  .showcase.flip .showcase-text { order: 2; }
-  .stage { padding: 3rem; }
-  .stage img { width: min(100%, 30rem); }
-  .showcase-text h3 { font-size: 2rem; line-height: 1.15; letter-spacing: -0.01em; }
 }
 
 @media (min-width: 64rem) {
-  .features { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .demo-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
@@ -330,9 +402,9 @@ details p { margin-top: 0.25rem; color: var(--text-2); }
     @keyframes window-drift { from { translate: 0 var(--drift); } to { translate: 0 calc(-1 * var(--drift)); } }
     @keyframes window-rise { to { translate: 0 calc(-2 * var(--drift)); } }
 
-    /* Each window drifts as its panel crosses the screen, and is at rest half-way. */
-    .stage, .hero-shot { view-timeline: --window block; }
-    .stage img, .hero-shot img { animation: window-drift 1ms linear both; animation-timeline: --window; }
+    /* Each picture drifts as it crosses the screen, and is at rest half-way. */
+    .tour-still, .hero-shot { view-timeline: --window block; }
+    .tour-still img, .hero-shot img { animation: window-drift 1ms linear both; animation-timeline: --window; }
 
     /* Beside the text, the hero's window is in view from the start: it rises from rest. */
     @media (min-width: 60rem) {
@@ -350,5 +422,5 @@ details p { margin-top: 0.25rem; color: var(--text-2); }
 @media (forced-colors: active) {
   .button, .os, .callout, kbd, code { border: 1px solid CanvasText; }
   .os.yours { border-width: 3px; }
-  .demo-window, .demo-popup, .hero-shot img, .stage img, .demo-menu { outline: 1px solid CanvasText; }
+  .demo-window, .demo-popup, .hero-shot img, .tour-still img, .tour-note, .tour-app, .tour-options, .demo-menu { outline: 1px solid CanvasText; }
 }
