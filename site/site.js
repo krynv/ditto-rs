@@ -96,6 +96,7 @@
     let target = 0; // where the page has scrolled to, counted in steps: 2.5 is half-way from the third to the fourth
     let shown = -1; // where the scene is
     let step = -1;
+    let typed = -1;
     let frame = 0;
     let last = 0;
     let later = 0;
@@ -104,6 +105,12 @@
     function paint(at) {
       stage.style.setProperty('--p', (at / (steps.length - 1)).toFixed(4));
       stage.style.setProperty('--wipe', ease((at - 5.55) / 0.42).toFixed(4));
+      // On the way to the second step the search is typed, a letter for each stretch of scrolling.
+      const letters = at < 0.5 ? 0 : at < 0.63 ? 1 : at < 0.76 ? 2 : at < 0.89 ? 3 : 4;
+      if (letters !== typed) {
+        typed = letters;
+        ['--k1', '--k2', '--k3', '--t1'].forEach((name, index) => stage.style.setProperty(name, letters > index ? 1 : 0));
+      }
       // While the note is in front, the paste is shown three ways in turn.
       const way = at < 3.85 ? '0' : at < 4.15 ? '1' : '2';
       if (stage.dataset.paste !== way) stage.dataset.paste = way;
@@ -114,7 +121,6 @@
       if (now === step) return;
       step = now;
       const set = (name, on) => stage.style.setProperty(name, on ? 1 : 0);
-      set('--t1', now >= 1);
       set('--t2', now >= 2);
       set('--t3', now >= 3);
       set('--paste', now === 4);
@@ -166,6 +172,7 @@
       tour.classList.toggle('is-live', wide.matches);
       shown = -1;
       step = -1;
+      typed = -1;
       measure();
     }
     wide.addEventListener('change', arrange);

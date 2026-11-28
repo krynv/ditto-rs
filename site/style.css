@@ -241,11 +241,15 @@ kbd {
    scene that stays in view, and the script sets these on the stage:
      --p, --wipe            how far through the tour, and through the change of theme: 0 to 1,
                             following the scrolling
-     --t1 --t2 --t3 --t6    each change of scene: 0 before it, 1 after
+     --k1 --k2 --k3 --t1    the search being typed, a letter at a time: 0 before each, 1 after
+     --t2 --t3 --t6         each later change of scene: 0 before it, 1 after
      --paste                1 while the clip is pasted into the note, 0 before and after
      --landed --later       1 once the paste has landed, and once it is over
    The second group are switches. They are registered as numbers so that a transition can run
    on them: a change of scene then plays through smoothly, wherever the scrolling stops. */
+@property --k1 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --k2 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --k3 { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --t1 { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --t2 { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --t3 { syntax: "<number>"; inherits: true; initial-value: 0; }
@@ -253,7 +257,7 @@ kbd {
 @property --paste { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --landed { syntax: "<number>"; inherits: true; initial-value: 0; }
 .tour-stage { --p: 0; --wipe: 0; --later: 0; --glide: cubic-bezier(0.22, 1, 0.36, 1);
-  transition: --t1 0.45s var(--glide), --t2 0.45s var(--glide), --t3 0.45s var(--glide), --t6 0.7s var(--glide), --paste 0.7s var(--glide), --landed 0.3s ease 0.3s; }
+  transition: --k1 0.12s linear, --k2 0.12s linear, --k3 0.12s linear, --t1 0.12s linear, --t2 0.45s var(--glide), --t3 0.45s var(--glide), --t6 0.7s var(--glide), --paste 0.7s var(--glide), --landed 0.3s ease 0.3s; }
 .tour.is-live .tour-body { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); column-gap: 4rem; }
 /* Room above and below, so the scene is in place for the first step and stays through the last. */
 .tour.is-live .tour-steps { display: block; padding-block: 8svh 16svh; }
@@ -301,11 +305,15 @@ kbd {
   translate: calc((1 - var(--t6)) * 8cqw) calc((1 - var(--t6)) * 5cqw); }
 .tour-app picture, .tour-options picture { position: absolute; inset: 0; }
 .tour-app img, .tour-options img { width: 100%; height: 100%; }
-/* The same window, changing: each state fades in over the one before. */
-.tour-app picture:nth-child(2) { opacity: var(--t1); }
-.tour-app picture:nth-child(3) { opacity: var(--t2); }
-.tour-app picture:nth-child(4) { opacity: var(--t3); }
-.tour-app picture:nth-child(5) { opacity: var(--later); }
+/* The same window, changing: each state fades in over the one before. The search is typed
+   a letter at a time, each letter its own picture of the list as it narrows. */
+.tour-app [data-layer="a"] { opacity: var(--k1); }
+.tour-app [data-layer="al"] { opacity: var(--k2); }
+.tour-app [data-layer="ale"] { opacity: var(--k3); }
+.tour-app [data-layer="alex"] { opacity: var(--t1); }
+.tour-app [data-layer="picture"] { opacity: var(--t2); }
+.tour-app [data-layer="preview"] { opacity: var(--t3); }
+.tour-app [data-layer="organise"] { opacity: var(--later); }
 /* The other theme sweeps across the Options window, behind a thin line. */
 .tour-other { clip-path: inset(0 calc((1 - var(--wipe)) * 100%) 0 0); }
 .tour-options::after { content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--wipe) * 100% - 1px); width: 2px; background: var(--accent); opacity: calc(4 * var(--wipe) * (1 - var(--wipe))); }
