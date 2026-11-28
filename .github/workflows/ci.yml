@@ -19,6 +19,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev build-essential
+          # Optional at run time; installed here so the text recognition tests run for real.
+          sudo apt-get install -y tesseract-ocr
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -29,8 +31,24 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
+      # Passing tests hide their output, so say here which engine this system used and what it read.
+      - name: Text recognition report
+        run: cargo test -p ditto-platform ocr -- --nocapture --test-threads=1
+
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+      # With the UI embedded (as in a release), so the build runs on another machine.
       - name: Build
-        run: cargo build -p ditto-rs --release
+        run: cargo build -p ditto-rs --release --features tauri/custom-protocol
+
+      # A runnable build of every push, for trying a change on a real machine before a release.
+      - name: Upload the build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ditto-rs-${{ runner.os }}
+          path: |
+            target/release/ditto-rs
+            target/release/ditto-rs.exe
+          if-no-files-found: error
+          retention-days: 7

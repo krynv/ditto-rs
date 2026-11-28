@@ -45,6 +45,9 @@ pub enum Theme {
     Dark,
 }
 
+/// Smallest and largest "Interface size", in percent.
+pub const UI_ZOOM_RANGE: std::ops::RangeInclusive<u32> = 50..=300;
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
@@ -74,6 +77,8 @@ pub struct Settings {
     /// Honour "do not record" markers set by password managers (Ditto honours
     /// `Clipboard Viewer Ignore` and `ExcludeClipboardContentFromMonitorProcessing`).
     pub respect_privacy_markers: bool,
+    /// Recognize the text in image clips (OCR) so they can be found by searching. Not in Ditto.
+    pub read_image_text: bool,
 
     // ---- Keyboard ------------------------------------------------------------------
     /// Global hotkey that opens the quick-paste window (Ditto `DittoHotKey` 704 = Ctrl+`).
@@ -111,7 +116,12 @@ pub struct Settings {
     /// Keep the window open when it loses focus.
     pub keep_open_on_blur: bool,
     pub theme: Theme,
+    /// Size of the clip text in the list, in pixels.
     pub font_size: u32,
+    /// "Interface size": how much both windows are zoomed, in percent (text, pictures, icons
+    /// and spacing together). Not in Ditto, which relies on the Windows display scale.
+    pub ui_zoom: u32,
+    /// Size of the quick-paste window at 100 % interface size, in logical pixels.
     pub window_width: u32,
     pub window_height: u32,
     /// Last window position, used by [`PopupPosition::AtPreviousPosition`].
@@ -137,6 +147,7 @@ impl Default for Settings {
             copy_app_include: "*".into(),
             copy_app_exclude: String::new(),
             respect_privacy_markers: true,
+            read_image_text: true,
             hotkey_activate: "Ctrl+Backquote".into(),
             hotkey_text_only_paste: String::new(),
             position_hotkeys: vec![String::new(); 10],
@@ -157,6 +168,7 @@ impl Default for Settings {
             keep_open_on_blur: false,
             theme: Theme::System,
             font_size: 13,
+            ui_zoom: 100,
             window_width: 420,
             window_height: 520,
             last_position: None,
@@ -206,8 +218,9 @@ impl Settings {
         self.lines_per_clip = self.lines_per_clip.clamp(1, 5);
         self.description_chars = self.description_chars.clamp(16, 100_000);
         self.font_size = self.font_size.clamp(9, 24);
-        self.window_width = self.window_width.clamp(260, 2000);
-        self.window_height = self.window_height.clamp(200, 2000);
+        self.ui_zoom = self.ui_zoom.clamp(*UI_ZOOM_RANGE.start(), *UI_ZOOM_RANGE.end());
+        self.window_width = self.window_width.clamp(260, 6000);
+        self.window_height = self.window_height.clamp(200, 6000);
         self.paste_delay_ms = self.paste_delay_ms.min(2000);
         self.expire_days = self.expire_days.max(1);
     }
@@ -264,6 +277,20 @@ mod tests {
         assert!(!wildcard_match("c?ome.exe", "chrome.exe"));
         assert!(wildcard_match("ch?ome.exe", "chrome.exe"));
         assert!(!wildcard_match("chrome", "chrome.exe"));
+    }
+
+    #[test]
+    fn interface_size_is_kept_in_range() {
+        assert_eq!(Settings::default().ui_zoom, 100);
+        for (given, kept) in [(0, 50), (49, 50), (50, 50), (150, 150), (300, 300), (301, 300), (5000, 300)] {
+            let mut s = Settings { ui_zoom: given, ..Default::default() };
+            s.normalize();
+            assert_eq!(s.ui_zoom, kept, "{given}");
+        }
+        // The window size is kept at 100 %, so it does not depend on the interface size.
+        let mut s = Settings { window_width: 2400, window_height: 3000, ui_zoom: 300, ..Default::default() };
+        s.normalize();
+        assert_eq!((s.window_width, s.window_height), (2400, 3000));
     }
 
     #[test]

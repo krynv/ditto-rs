@@ -79,6 +79,8 @@ pub fn capture_now(app: &AppHandle, forced: bool) -> Option<i64> {
                 Ok(outcome) => {
                     log::debug!("saved clip: {outcome:?}");
                     emit_clips_changed(app);
+                    // A new image is read in the background so it can be found by its text.
+                    crate::image_text::wake(app);
                     Some(outcome.id())
                 }
                 Err(e) => {

@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use std::sync::atomic::AtomicBool;
+use std::sync::mpsc::Sender;
 use std::sync::{Mutex, MutexGuard, RwLock};
 use std::time::Instant;
 
@@ -39,6 +40,8 @@ pub struct AppState {
     pub popup_shown_at: Mutex<Option<Instant>>,
     /// When the quick-paste window last opened a native context menu.
     pub menu_shown_at: Mutex<Option<Instant>>,
+    /// Wakes the worker that reads the text in image clips (`image_text.rs`).
+    pub image_text_wake: Mutex<Option<Sender<()>>>,
 }
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -59,6 +62,7 @@ impl AppState {
             accessibility_prompted: AtomicBool::new(false),
             popup_shown_at: Mutex::new(None),
             menu_shown_at: Mutex::new(None),
+            image_text_wake: Mutex::new(None),
         }
     }
 
@@ -109,6 +113,10 @@ impl AppState {
 
     pub fn lock_menu_shown_at(&self) -> MutexGuard<'_, Option<Instant>> {
         lock(&self.menu_shown_at)
+    }
+
+    pub fn lock_image_text_wake(&self) -> MutexGuard<'_, Option<Sender<()>>> {
+        lock(&self.image_text_wake)
     }
 }
 

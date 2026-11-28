@@ -99,6 +99,8 @@ pub struct ClipDetails {
     rtf_text: Option<String>,
     image: Option<String>,
     image_size: Option<(u32, u32)>,
+    /// Text recognized in an image clip: `None` = not read (yet), empty = none found.
+    image_text: Option<String>,
     files: Vec<String>,
     formats: Vec<FormatInfo>,
 }
@@ -127,6 +129,7 @@ pub fn clip_details(app: AppHandle, id: i64) -> CmdResult<ClipDetails> {
         rtf_text: content.rtf().map(ditto_core::text::rtf_to_text),
         image: content.png().map(|p| data_url("image/png", p)),
         image_size: content.png().and_then(png_dimensions),
+        image_text: store.image_text(id).map_err(err)?,
         files: content.files(),
         formats: content.formats().iter().map(|f| FormatInfo { name: f.name.clone(), size: f.data.len() }).collect(),
         summary,
@@ -327,7 +330,13 @@ pub fn save_settings(app: AppHandle, settings: Settings) -> CmdResult<SaveSettin
         hotkeys::parse(hk)?;
     }
     let st = state(&app);
-    let saved = st.set_settings(settings).map_err(err)?;
+    let old_zoom = st.settings().ui_zoom;
+    let mut saved = st.set_settings(settings).map_err(err)?;
+    if saved.ui_zoom != old_zoom {
+        // "Reset to Defaults" can change the interface size; the windows are resized to match.
+        popup::zoom_changed(&app, old_zoom);
+        saved = st.settings();
+    }
     let mut warnings = hotkeys::register_all(&app);
     if let Err(e) = apply_autostart(&app, saved.start_on_login) {
         warnings.push(format!("Start on login: {e}"));
@@ -336,7 +345,27 @@ pub fn save_settings(app: AppHandle, settings: Settings) -> CmdResult<SaveSettin
         emit_clips_changed(&app);
     }
     let _ = app.emit(EVENT_SETTINGS_CHANGED, &saved);
+    // "Read the text in images" may have been switched on.
+    crate::image_text::wake(&app);
     Ok(SaveSettingsResult { settings: saved, warnings })
+}
+
+/// "Interface size" from the quick-paste menu, the options window or ⌘+ / ⌘−. Unlike the other
+/// options it applies at once, so the effect is visible while choosing.
+#[tauri::command(rename_all = "snake_case")]
+pub fn set_ui_zoom(app: AppHandle, percent: u32) -> CmdResult<Settings> {
+    let st = state(&app);
+    let mut settings = st.settings();
+    let old_zoom = settings.ui_zoom;
+    settings.ui_zoom = percent;
+    let saved = st.set_settings(settings).map_err(err)?;
+    if saved.ui_zoom != old_zoom {
+        popup::zoom_changed(&app, old_zoom);
+    }
+    // Read again: resizing the quick-paste window updated its saved size.
+    let saved = st.settings();
+    let _ = app.emit(EVENT_SETTINGS_CHANGED, &saved);
+    Ok(saved)
 }
 
 pub fn apply_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
@@ -365,6 +394,8 @@ pub struct AppInfo {
     db_path: String,
     portable: bool,
     can_paste: bool,
+    /// Whether "Interface size" works here (the web view can zoom).
+    zoom_supported: bool,
     capture_paused: bool,
     hotkey_problems: Vec<String>,
 }
@@ -379,6 +410,7 @@ pub fn app_info(app: AppHandle) -> AppInfo {
         db_path: st.paths.db.display().to_string(),
         portable: st.paths.portable,
         can_paste: input::can_send_keystrokes(false),
+        zoom_supported: ditto_platform::webview_zoom_supported(),
         capture_paused: st.capture_paused.load(Ordering::Relaxed),
         hotkey_problems: st.lock_hotkey_problems().clone(),
     }
@@ -387,6 +419,27 @@ pub fn app_info(app: AppHandle) -> AppInfo {
 #[tauri::command(rename_all = "snake_case")]
 pub fn stats(app: AppHandle) -> CmdResult<Stats> {
     state(&app).store().stats().map_err(err)
+}
+
+/// Text recognition in image clips, for the options window.
+#[derive(Debug, Serialize)]
+pub struct ImageTextStatus {
+    /// "Apple Vision", "Windows OCR" or "Tesseract".
+    engine: &'static str,
+    available: bool,
+    /// The languages it reads, or what to install.
+    detail: String,
+    /// Image clips whose text has been read, and those still waiting.
+    read: i64,
+    waiting: i64,
+}
+
+/// Async so it stays off the main thread: finding the engine can start a process (Linux).
+#[tauri::command(rename_all = "snake_case")]
+pub async fn image_text_status(app: AppHandle) -> CmdResult<ImageTextStatus> {
+    let status = ditto_platform::ocr::status();
+    let (read, waiting) = state(&app).store().image_text_progress().map_err(err)?;
+    Ok(ImageTextStatus { engine: status.engine, available: status.available, detail: status.detail, read, waiting })
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -439,6 +492,7 @@ pub fn import_from(app: &AppHandle, path: &std::path::Path) -> CmdResult<ImportR
     hotkeys::register_all(app);
     emit_groups_changed(app);
     emit_clips_changed(app);
+    crate::image_text::wake(app);
     Ok(report)
 }
 

@@ -32,6 +32,59 @@ pub fn thumbnail_png(png: &[u8], max_w: u32, max_h: u32) -> Result<Vec<u8>> {
     encode_png(&img.thumbnail(max_w, max_h))
 }
 
+/// Grayscale pixels prepared for a text recognition engine (see [`gray_for_ocr`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OcrGray {
+    pub width: u32,
+    pub height: u32,
+    /// One byte per pixel, row by row.
+    pub pixels: Vec<u8>,
+}
+
+impl OcrGray {
+    /// The share of pixels darker than mid-gray: near 1 for a dark-theme screenshot.
+    pub fn dark_fraction(&self) -> f64 {
+        if self.pixels.is_empty() {
+            return 0.0;
+        }
+        self.pixels.iter().filter(|&&p| p < 128).count() as f64 / self.pixels.len() as f64
+    }
+
+    /// A binary PGM (`P5`) file, optionally with light and dark swapped.
+    pub fn to_pgm(&self, inverted: bool) -> Vec<u8> {
+        let mut out = format!("P5\n{} {}\n255\n", self.width, self.height).into_bytes();
+        if inverted {
+            out.extend(self.pixels.iter().map(|p| 255 - p));
+        } else {
+            out.extend_from_slice(&self.pixels);
+        }
+        out
+    }
+}
+
+/// A grayscale copy of an image, enlarged `scale` times, with transparent areas turned white.
+/// For engines that read small text poorly: Tesseract works best on text about 30 px tall,
+/// and a 100 % screenshot has 11–13 px text.
+pub fn gray_for_ocr(image: &[u8], scale: u32) -> Result<OcrGray> {
+    let rgba = decode(image)?.to_rgba8();
+    let (w, h) = rgba.dimensions();
+    let mut gray = image::GrayImage::new(w, h);
+    for (src, dst) in rgba.pixels().zip(gray.pixels_mut()) {
+        let [r, g, b, a] = src.0.map(u32::from);
+        let luma = (r * 299 + g * 587 + b * 114) / 1000;
+        dst.0 = [((luma * a + 255 * (255 - a)) / 255) as u8];
+    }
+    let scale = scale.max(1);
+    if scale > 1 {
+        let (sw, sh) = (w.saturating_mul(scale), h.saturating_mul(scale));
+        if u64::from(sw) * u64::from(sh) > 400_000_000 {
+            return Err(Error::Invalid("enlarged image would be too large".into()));
+        }
+        gray = imageops::resize(&gray, sw, sh, imageops::FilterType::CatmullRom);
+    }
+    Ok(OcrGray { width: gray.width(), height: gray.height(), pixels: gray.into_raw() })
+}
+
 /// Combine several images side by side (`horizontal`) or stacked, on a transparent canvas.
 pub fn combine_png(images: &[&[u8]], horizontal: bool) -> Result<Vec<u8>> {
     if images.is_empty() {
@@ -114,6 +167,25 @@ mod tests {
         let big = png(400, 100, [1, 2, 3, 255]);
         let t = thumbnail_png(&big, 200, 200).unwrap();
         assert_eq!(crate::model::png_dimensions(&t), Some((200, 50)));
+    }
+
+    #[test]
+    fn gray_for_ocr_flattens_transparency_and_enlarges() {
+        let mut img = RgbaImage::from_pixel(2, 1, image::Rgba([0, 0, 0, 255]));
+        img.put_pixel(1, 0, image::Rgba([0, 0, 0, 0]));
+        let two_pixels = encode_png(&DynamicImage::ImageRgba8(img)).unwrap();
+        // Opaque black stays black; transparent black becomes white.
+        let gray = gray_for_ocr(&two_pixels, 1).unwrap();
+        assert_eq!(gray, OcrGray { width: 2, height: 1, pixels: vec![0, 255] });
+        assert_eq!(gray.dark_fraction(), 0.5);
+        assert_eq!(gray.to_pgm(false), b"P5\n2 1\n255\n\x00\xff");
+        assert_eq!(gray.to_pgm(true), b"P5\n2 1\n255\n\xff\x00");
+
+        let big = gray_for_ocr(&png(3, 2, [255, 255, 255, 255]), 2).unwrap();
+        assert_eq!((big.width, big.height, big.pixels.len()), (6, 4, 24));
+        assert!(big.pixels.iter().all(|&p| p == 255));
+        assert_eq!(big.dark_fraction(), 0.0);
+        assert!(gray_for_ocr(b"not an image", 2).is_err());
     }
 
     #[test]

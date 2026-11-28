@@ -157,6 +157,56 @@
     return frag;
   }
 
+  /** "Interface size" zooms both windows. Unlike the other options it applies at once. */
+  async function setZoom(percent) {
+    if (percent === saved.ui_zoom) return;
+    try {
+      adoptAppliedSettings(await invoke('set_ui_zoom', { percent }));
+      render();
+      updateSaveBar();
+    } catch (e) {
+      updateSaveBar(String(e), 'error');
+    }
+  }
+
+  /** Settings the app changed by itself are not part of the unsaved edits. */
+  function adoptAppliedSettings(applied) {
+    saved = applied;
+    for (const key of ['ui_zoom', 'window_width', 'window_height', 'last_position']) draft[key] = applied[key];
+  }
+
+  function interfaceSize() {
+    if (!info.zoom_supported) return null;
+    const row = el('div', 'row');
+    row.append(el('span', 'label', 'Interface size'));
+    const input = el('select');
+    const sizes = [...new Set([...D.ZOOM_STEPS, saved.ui_zoom])].sort((a, b) => a - b);
+    for (const z of sizes) input.append(new Option(`${z}%`, String(z)));
+    input.value = String(saved.ui_zoom);
+    input.addEventListener('change', () => setZoom(Number(input.value)));
+    const mod = D.isMac ? '⌘' : 'Ctrl+';
+    row.append(input, el('p', 'hint', `Makes everything larger or smaller: text, pictures and both windows. It applies straight away. You can also press ${mod}+ and ${mod}− in either window.`));
+    return row;
+  }
+
+  /** Which engine reads the text in images here, and how far it has got. */
+  function imageTextStatus() {
+    const line = el('p', 'hint', '');
+    invoke('image_text_status')
+      .then((s) => {
+        if (!s.available) {
+          line.textContent = s.detail;
+          return;
+        }
+        const progress = s.waiting
+          ? ` Reading ${s.waiting.toLocaleString()} more ${s.waiting === 1 ? 'image' : 'images'} in the background.`
+          : s.read ? ` ${s.read.toLocaleString()} ${s.read === 1 ? 'image' : 'images'} read.` : '';
+        line.textContent = `${s.engine}: ${s.detail}${progress}`;
+      })
+      .catch(() => {});
+    return line;
+  }
+
   // ---- pages ----------------------------------------------------------------------------
 
   function pageGeneral() {
@@ -168,6 +218,8 @@
       check('capture.images', 'Images'),
       check('capture.files', 'File lists'),
     );
+    const imageText = check('read_image_text', 'Read the text in images so search can find them', 'Screenshots and other image clips are read on this computer. Nothing is sent anywhere.');
+    imageText.append(imageTextStatus());
     return [
       header('General', 'What Ditto-RS saves, and for how long.'),
       section(null, check('start_on_login', 'Start Ditto-RS when you log in')),
@@ -181,6 +233,7 @@
         number('description_chars', 'Characters shown in the list', { min: 16, max: 100000 }),
       ),
       section('Supported types', types),
+      section('Text in images', imageText),
       section(
         'Applications',
         text('copy_app_include', 'Only save copies made in', { placeholder: '*' }),
@@ -254,7 +307,8 @@
       section(
         'Appearance',
         select('theme', 'Theme', [['system', 'Same as the system'], ['light', 'Light'], ['dark', 'Dark']]),
-        number('font_size', 'Font size', { min: 9, max: 24, suffix: 'px' }),
+        interfaceSize(),
+        number('font_size', 'Clip text size', { min: 9, max: 24, suffix: 'px' }),
         number('lines_per_clip', 'Text lines per clip', { min: 1, max: 5 }),
         select('popup_position', 'Open the window', [['at_cursor', 'At the mouse cursor'], ['at_previous_position', 'Where it was last'], ['center_of_screen', 'In the middle of the screen']]),
         check('show_quick_paste_numbers', 'Show numbers for the first ten clips'),
@@ -397,12 +451,18 @@
     ['about', 'About', pageAbout],
   ];
 
+  let shownPage = null;
+
   async function render() {
     dependents.length = 0;
     const page = PAGES.find(([id]) => id === current);
     const nodes = await page[2]();
+    // Redrawing the page that is already shown must not jump back to its top.
+    const scrollTop = shownPage === current ? pageEl.scrollTop : 0;
     pageEl.textContent = '';
     pageEl.append(...nodes.filter(Boolean));
+    pageEl.scrollTop = scrollTop;
+    shownPage = current;
     refreshDependents();
     for (const b of document.querySelectorAll('#nav button')) {
       b.setAttribute('aria-current', b.dataset.page === current ? 'page' : 'false');
@@ -492,7 +552,11 @@
       }
     });
     document.addEventListener('keydown', (e) => {
-      if ((D.isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === 's') {
+      const zoomStep = info.zoom_supported ? D.zoomKey(e) : 0;
+      if (zoomStep) {
+        e.preventDefault();
+        setZoom(D.nextZoom(saved.ui_zoom, zoomStep));
+      } else if ((D.isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         if (isDirty()) save();
       }
@@ -502,10 +566,10 @@
       if (!isDirty()) {
         saved = e.payload;
         draft = clone(saved);
-        render();
       } else {
-        saved = e.payload;
+        adoptAppliedSettings(e.payload);
       }
+      render();
       updateSaveBar();
     });
   }

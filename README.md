@@ -48,6 +48,8 @@ Ditto-RS lives in the system tray / menu bar. Launching it again opens the quick
   stored locally in SQLite. Copy something again and it simply jumps back to the top.
 - **Find as you type**: words are ANDed, with `OR`, `NOT`, `"exact phrases"`, `*` wildcards,
   regular expressions, and `/f` (full text) or `/q` (quick-paste text) prefixes.
+- **Find images by the text in them**: screenshots and other image clips are read on your
+  computer (OCR), so typing a word that appears in a picture finds it. Ditto can't do this.
 - **Paste where you were**: focus goes back to the previous app and the paste keystroke is sent
   for you. **Shift + Enter** pastes plain text.
 - **Special Paste**: UPPER / lower / Capitalize / Sentence / Invert case, trim, CamelCase,
@@ -62,6 +64,8 @@ Ditto-RS lives in the system tray / menu bar. Launching it again opens the quick
   are skipped, and you can exclude apps by name.
 - **Moving from Ditto?** *Options → Database → Import Ditto Database…* brings over your clips,
   groups, sticky clips, quick-paste text and hotkeys from `Ditto.db`.
+- **Easy on the eyes**: an *Interface size* setting, or **Ctrl/⌘ +** and **Ctrl/⌘ −**, makes
+  everything larger or smaller at once, from 75 % to 300 %: text, pictures and both windows.
 - Light & dark themes, adjustable lines per clip and font size, portable mode, tray menu, statistics,
   backup and compact.
 
@@ -82,6 +86,7 @@ Ditto-RS lives in the system tray / menu bar. Launching it again opens the quick
 | <kbd>F7</kbd> / <kbd>Ctrl</kbd> + <kbd>F7</kbd> | New group from the selection / new group |
 | <kbd>Ctrl</kbd> + <kbd>G</kbd> | Switch group |
 | <kbd>Ctrl</kbd> + <kbd>Space</kbd> | Keep the window open |
+| <kbd>Ctrl</kbd> + <kbd>+</kbd> / <kbd>−</kbd> | Make the interface larger / smaller |
 | <kbd>Del</kbd> | Delete the selected clip(s) |
 | <kbd>Esc</kbd> | Clear the search, then close |
 
@@ -92,11 +97,17 @@ else: Special Paste, clip order, sticky clips, groups and quick properties.
 
 - **macOS**: pasting needs *Accessibility* access (System Settings → Privacy & Security →
   Accessibility). Until it is granted, clips are copied and you paste with ⌘V yourself.
+  Text in images is read with Apple Vision.
 - **Linux (X11)**: everything works. **Wayland**: apps cannot register global hotkeys or move
   focus, so bind `ditto-rs --show` to a shortcut in your desktop's keyboard settings. Clipboard
-  history works where the compositor supports the data-control protocol.
+  history works where the compositor supports the data-control protocol. To search the text in
+  images, install [Tesseract](https://github.com/tesseract-ocr/tesseract)
+  (`sudo apt install tesseract-ocr`, `sudo dnf install tesseract`); without it everything else
+  still works.
 - **Windows**: behaves like Ditto. Focus is restored with `SetForegroundWindow`, with
-  `AttachThreadInput` as a fallback.
+  `AttachThreadInput` as a fallback. Text in images is read with Windows' built-in text
+  recognition, in the languages whose packs are installed (Settings → Time & language →
+  Language & region).
 
 Data lives in `%APPDATA%\Ditto-RS`, `~/Library/Application Support/Ditto-RS` or
 `~/.local/share/Ditto-RS`. Put an empty file named `portable` next to the executable to keep it
@@ -110,8 +121,10 @@ ditto-rs                     start (or open the quick-paste window of the runnin
 ditto-rs --show              open the quick-paste window
 ditto-rs --options           open the options window
 ditto-rs --quit              stop the running instance
+ditto-rs --zoom 150          set the interface size (50 to 300; 100 is normal)
 ditto-rs --list [N] [TEXT]   print recent clips, optionally filtered
 ditto-rs --import Ditto.db   import a Ditto database
+ditto-rs --ocr image.png     print the text found in an image (what search sees)
 ditto-rs --paths             print where data is stored
 ```
 
@@ -140,7 +153,7 @@ builds every platform and attaches the installers to a draft GitHub Release for 
 
 ```
 crates/ditto-core      clip model, SQLite history, search, Special Paste, settings, Ditto.db import
-crates/ditto-platform  clipboard read/write/watch, focus tracking, paste keystroke (per-OS code)
+crates/ditto-platform  clipboard read/write/watch, focus tracking, paste keystroke, text recognition (per-OS code)
 app/                   Tauri 2 shell: tray, hotkeys, windows, capture loop, paste flow, CLI
 ui/                    quick-paste and options windows (plain HTML/CSS/JS, no build step)
 site/                  the website; its live demo runs the files in ui/ (tools/build-site.sh)
