@@ -25,7 +25,7 @@
   // The sample picture is a screenshot of a rail ticket. These are the words on it: the app
   // reads them from the pixels; here they are known.
   const TICKET = {
-    title: 'Mobile ticket', fare: 'Adult · Standard',
+    title: 'Mobile ticket', fare: 'Adult - Standard',
     from: 'London Kings Cross', to: 'Edinburgh',
     fields: [['Date', 'Sat 5 Dec'], ['Departs', '09:42'], ['Platform', '4'], ['Coach', 'C'], ['Seat', '21']],
     reference: ['Booking reference', 'TK49QX'],

@@ -16,6 +16,16 @@
   // Copy is ⌘C on a Mac. (The Ditto-RS hot key is Ctrl + ` everywhere.)
   if (isMac) document.querySelectorAll('.mod-key').forEach((key) => { key.textContent = '⌘'; });
 
+  // The note under the main buttons is set one sentence per line. A line is text, or a list
+  // of text and elements.
+  function heroNote(...lines) {
+    $('hero-note').replaceChildren(...lines.map((parts) => {
+      const line = document.createElement('span');
+      line.append(...[parts].flat());
+      return line;
+    }));
+  }
+
   if (os) {
     const card = document.querySelector(`.os[data-os="${os}"]`);
     card.classList.add('yours');
@@ -27,7 +37,7 @@
     card.parentElement.prepend(card);
     for (const id of ['hero-download', 'final-download']) $(id).textContent = `Download for ${OS_NAME[os]}`;
   } else if (phone) {
-    $('hero-note').textContent = 'Ditto-RS is a desktop app for Windows, macOS and Linux. Open this page on your computer to download it.';
+    heroNote('Ditto-RS is a desktop app for Windows, macOS and Linux.', 'Open this page on your computer to download it.');
   }
 
   // ---- the latest release -------------------------------------------------------------------
@@ -44,17 +54,23 @@
       const asset = found[link.dataset.asset];
       if (!asset) continue;
       link.href = asset.browser_download_url;
-      if ('main' in link.dataset) link.closest('.os').querySelector('.req').append(` · ${megabytes(asset.size)}`);
+      if ('main' in link.dataset) link.closest('.os').querySelector('.req').append(` - ${megabytes(asset.size)}`);
       else link.textContent = `${link.textContent} (${megabytes(asset.size)})`;
     }
-    const version = release.tag_name.replace(/^v/, '');
+    // The version is a link to that release's notes.
+    const versionLink = () => {
+      const link = document.createElement('a');
+      link.href = `https://github.com/${REPO}/releases/tag/${encodeURIComponent(release.tag_name)}`;
+      link.textContent = `Version ${release.tag_name.replace(/^v/, '')}`;
+      return link;
+    };
     const date = new Date(release.published_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-    $('download-version').textContent = `Version ${version}, released ${date}. Free, for as long as you like.`;
+    $('download-version').replaceChildren(versionLink(), `, released ${date}. Free, for as long as you like.`);
     const mine = os && found[PRIMARY[os]];
     if (mine) {
       for (const id of ['hero-download', 'final-download']) $(id).href = mine.browser_download_url;
       const others = Object.keys(OS_NAME).filter((name) => name !== os).map((name) => OS_NAME[name]).join(' and ');
-      $('hero-note').textContent = `Version ${version} · ${megabytes(mine.size)} · also for ${others}. Free and open source, with no account and no tracking.`;
+      heroNote([versionLink(), ` - ${megabytes(mine.size)} - also for ${others}.`], 'Free and open source, with no account and no tracking.');
     }
   }
 
