@@ -7,7 +7,8 @@
   <meta name="description" content="Ditto-RS keeps a searchable history of everything you copy: text, pictures and files. Press a hotkey, type a few letters, press Enter. Free, open source, and nothing leaves your computer.">
   <link rel="canonical" href="https://krynv.github.io/ditto-rs/">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#17153a">
+  <meta name="theme-color" content="#ebedf1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#191a1e" media="(prefers-color-scheme: dark)">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Ditto-RS">
@@ -59,8 +60,7 @@
 
     <div class="hero-body wrap">
       <div class="hero-text">
-        <p class="eyebrow">Free and open source · Windows, macOS, Linux</p>
-        <h1>Everything you copy, one keystroke away.</h1>
+        <h1>Everything you copy, one keystroke away</h1>
         <p class="lead lines">
           <span>Ditto-RS remembers what you copy: text, pictures and files.</span>
           <span>Press <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>`</kbd>, type a few letters and hit <kbd>Enter</kbd>.</span>
@@ -68,13 +68,16 @@
         </p>
         <div class="cta">
           <a class="button primary" id="hero-download" href="https://github.com/krynv/ditto-rs/releases/latest">Download Ditto-RS</a>
-          <a class="button ghost" href="#try">Try it in your browser</a>
+          <a class="button" href="#try">Try it in your browser</a>
         </div>
-        <p class="cta-note" id="hero-note">Free for Windows, macOS and Linux. No account, no tracking.</p>
+        <p class="cta-note" id="hero-note">Free and open source, for Windows, macOS and Linux. No account, no tracking.</p>
       </div>
       <div class="hero-shot">
-        <img src="shots/popup.webp" width="840" height="1040" fetchpriority="high"
-             alt="The Ditto-RS quick-paste window: a numbered list of recent clips, including a signature, a web address, a code snippet, a picture and two files, above a search box.">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="shots/popup-dark.webp">
+          <img src="shots/popup-light.webp" width="1050" height="1300" fetchpriority="high"
+               alt="The Ditto-RS quick-paste window: a numbered list of recent clips, including a web address, a signature, a picture of a train ticket, a code snippet and two files, above a search box.">
+        </picture>
       </div>
     </div>
   </div>
@@ -105,17 +108,29 @@ Select anything here and copy it. It joins your clipboard history.
 
           <div class="demo-start" id="demo-start-panel">
             <button class="button primary" id="demo-start" type="button">Start the demo</button>
-            <p>Works best with a keyboard.</p>
+            <p>Works best with a keyboard</p>
           </div>
           <p class="demo-toast" id="demo-toast" role="status" aria-live="polite"></p>
         </div>
 
         <ol class="demo-steps">
-          <li><strong>Copy something.</strong> Select text in the note and press <kbd class="mod-key">Ctrl</kbd>&nbsp;+&nbsp;<kbd>C</kbd>.</li>
-          <li><strong>Open Ditto-RS.</strong> Press <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>`</kbd>, or use the button. Your copy is at the top.
-            <button class="button small" id="demo-open" type="button" hidden>Open Ditto-RS</button></li>
-          <li><strong>Find and paste.</strong> Type a few letters, pick a clip with <kbd>↑</kbd> <kbd>↓</kbd> and press <kbd>Enter</kbd>. It lands in the note.</li>
-          <li><strong>Look around.</strong> Type <code>screenshot</code> to find the picture by the words in it. <kbd>F3</kbd> previews a clip, and a right-click offers Special Paste, groups and sticky clips.</li>
+          <li>
+            <h3>Copy something</h3>
+            <p>Select text in the note and press <kbd class="mod-key">Ctrl</kbd>&nbsp;+&nbsp;<kbd>C</kbd>.</p>
+          </li>
+          <li>
+            <h3>Open Ditto-RS</h3>
+            <p>Press <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>`</kbd>, or use the button. Your copy is at the top.</p>
+            <button class="button small" id="demo-open" type="button" hidden>Open Ditto-RS</button>
+          </li>
+          <li>
+            <h3>Find and paste</h3>
+            <p>Type a few letters, pick a clip with <kbd>↑</kbd> <kbd>↓</kbd> and press <kbd>Enter</kbd>. It lands in the note.</p>
+          </li>
+          <li>
+            <h3>Look around</h3>
+            <p>Type <code>edinburgh</code> to find the train ticket by the words on it. <kbd>F3</kbd> previews a clip, and a right-click offers Special Paste, groups and sticky clips.</p>
+          </li>
         </ol>
       </div>
     </section>
@@ -132,32 +147,26 @@ Select anything here and copy it. It joins your clipboard history.
 
         <ul class="features">
           <li>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4.5V3.6c0-.9.7-1.6 1.6-1.6h2.8c.9 0 1.6.7 1.6 1.6v.9M9 10h6M9 14h6M9 18h3"/></svg>
             <h3>It keeps everything you copy</h3>
             <p>Text, formatted text, pictures and lists of files, saved in a history on your own disk. Copy the same thing again and it moves back to the top.</p>
           </li>
           <li>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
             <h3>You find things by typing</h3>
             <p>Start typing and the list narrows. It finds pictures too, by the words in them. Words are combined, and you can add <code>OR</code>, <code>NOT</code>, <code>"exact phrases"</code>, wildcards or regular expressions.</p>
           </li>
           <li>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5v6a4 4 0 0 1-4 4H5"/><path d="m9 11-4 4 4 4"/></svg>
             <h3>It pastes where you were</h3>
             <p>Pick a clip and Ditto-RS returns to the app you came from and pastes for you. <kbd>Shift</kbd>&nbsp;+&nbsp;<kbd>Enter</kbd> pastes plain text. <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>1</kbd> to <kbd>0</kbd> paste the ten newest clips.</p>
           </li>
           <li>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg>
             <h3>Special Paste</h3>
             <p>Paste in UPPER CASE or lower case, trimmed, on one line, as a web-address slug, or with the time added. Select several clips and paste them together.</p>
           </li>
           <li>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l-1 6 3.5 3.5V14H6.5v-1.5L10 9 9 3ZM12 14v7"/></svg>
             <h3>Keep what matters</h3>
             <p>Pin clips to the top, sort them into groups, give them names, and give your favourites their own hotkey that works anywhere.</p>
           </li>
           <li>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.4 3 8 7.5 9.5 4.5-1.500 7.5-5.100 7.5-9.500V6L12 3Z"/><path d="m9 12 2.200 2.200L15.200 10"/></svg>
             <h3>Private by design</h3>
             <p>Your history never leaves your computer: no account, no sync, no telemetry. Copies that password managers mark as secret are skipped, and you can exclude any app.</p>
           </li>
@@ -174,8 +183,11 @@ Select anything here and copy it. It joins your clipboard history.
           <p>Press <kbd>F3</kbd> to look at the whole clip: the full text, the formatted version, the picture at full size, or the list of files, with where and when you copied it.</p>
         </div>
         <div class="stage">
-          <img src="shots/preview.webp" width="840" height="1040" loading="lazy"
-               alt="The preview panel showing a copied picture at full size, with tabs for Image and Info.">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="shots/preview-dark.webp">
+            <img src="shots/preview-light.webp" width="1050" height="1000" loading="lazy"
+                 alt="The preview panel showing a copied picture of a train ticket at full size, with tabs for Image and Info.">
+          </picture>
         </div>
       </div>
 
@@ -185,8 +197,11 @@ Select anything here and copy it. It joins your clipboard history.
           <p>Light and dark themes, your own hotkeys, how much history to keep and for how long, which apps to ignore, and where the window opens. Text too small? Turn up the interface size and everything grows at once, up to 300&nbsp;%. Sensible defaults, taken from Ditto, so you can leave it all alone.</p>
         </div>
         <div class="stage wide">
-          <img src="shots/options.webp" width="1520" height="1240" loading="lazy"
-               alt="The Options window on its General page, with settings for start-up, history size, supported types and applications.">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="shots/options-dark.webp">
+            <img src="shots/options-light.webp" width="1520" height="1240" loading="lazy"
+                 alt="The Options window on its General page, with settings for start-up, history size, supported types and applications.">
+          </picture>
         </div>
       </div>
 
@@ -233,7 +248,7 @@ Select anything here and copy it. It joins your clipboard history.
         <article class="os" data-os="macos">
           <h3>macOS</h3>
           <p class="req">macOS 10.15 or later, Apple silicon and Intel</p>
-          <p class="os-buttons"><a class="button primary" data-asset="dmg" href="https://github.com/krynv/ditto-rs/releases/latest">Download for macOS</a></p>
+          <p class="os-buttons"><a class="button" data-main data-asset="dmg" href="https://github.com/krynv/ditto-rs/releases/latest">Download for macOS</a></p>
           <details>
             <summary>First launch on a Mac</summary>
             <p>The app is not notarized by Apple yet, so macOS will say it cannot check it. Try to open it once, then go to <strong>System Settings → Privacy &amp; Security</strong> and choose <strong>Open Anyway</strong>. When asked, allow <strong>Accessibility</strong> access so Ditto-RS can paste for you.</p>
@@ -244,8 +259,8 @@ Select anything here and copy it. It joins your clipboard history.
           <h3>Windows</h3>
           <p class="req">Windows 10 and 11, 64-bit</p>
           <p class="os-buttons">
-            <a class="button primary" data-asset="exe" href="https://github.com/krynv/ditto-rs/releases/latest">Download for Windows</a>
-            <a class="button quiet" data-asset="msi" href="https://github.com/krynv/ditto-rs/releases/latest">.msi</a>
+            <a class="button" data-main data-asset="exe" href="https://github.com/krynv/ditto-rs/releases/latest">Download for Windows</a>
+            <a class="button" data-asset="msi" href="https://github.com/krynv/ditto-rs/releases/latest">.msi</a>
           </p>
           <details>
             <summary>First launch on Windows</summary>
@@ -257,9 +272,9 @@ Select anything here and copy it. It joins your clipboard history.
           <h3>Linux</h3>
           <p class="req">64-bit, with WebKitGTK 4.1</p>
           <p class="os-buttons">
-            <a class="button primary" data-asset="appimage" href="https://github.com/krynv/ditto-rs/releases/latest">AppImage</a>
-            <a class="button quiet" data-asset="deb" href="https://github.com/krynv/ditto-rs/releases/latest">.deb</a>
-            <a class="button quiet" data-asset="rpm" href="https://github.com/krynv/ditto-rs/releases/latest">.rpm</a>
+            <a class="button" data-main data-asset="appimage" href="https://github.com/krynv/ditto-rs/releases/latest">AppImage</a>
+            <a class="button" data-asset="deb" href="https://github.com/krynv/ditto-rs/releases/latest">.deb</a>
+            <a class="button" data-asset="rpm" href="https://github.com/krynv/ditto-rs/releases/latest">.rpm</a>
           </p>
           <details>
             <summary>Notes for Linux</summary>
@@ -313,7 +328,7 @@ Select anything here and copy it. It joins your clipboard history.
     </section>
 
     <section class="section wrap final" aria-labelledby="final-title">
-      <h2 id="final-title">Stop copying things twice.</h2>
+      <h2 id="final-title">Stop copying things twice</h2>
       <p><a class="button primary" id="final-download" href="https://github.com/krynv/ditto-rs/releases/latest">Download Ditto-RS</a></p>
     </section>
   </main>
@@ -322,7 +337,7 @@ Select anything here and copy it. It joins your clipboard history.
     <div class="wrap">
       <p><strong>Ditto-RS</strong> is free software under the <a href="https://github.com/krynv/ditto-rs/blob/main/LICENSE">GNU General Public License v3.0</a>. It is a re-creation of <a href="https://github.com/sabrogden/Ditto">Ditto</a> by Scott Brogden and contributors, and is not affiliated with it.</p>
       <p><a href="https://github.com/krynv/ditto-rs">Source code</a> · <a href="https://github.com/krynv/ditto-rs/issues">Report a problem</a> · <a href="https://github.com/krynv/ditto-rs/releases">Releases</a></p>
-      <p class="quiet-note">This page uses no cookies and no trackers.</p>
+      <p>This page uses no cookies and no trackers</p>
     </div>
   </footer>
 

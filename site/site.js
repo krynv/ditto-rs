@@ -23,6 +23,7 @@
     tag.className = 'yours-tag';
     tag.textContent = 'Your system';
     card.querySelector('h3').append(' ', tag);
+    card.querySelector('[data-main]').classList.add('primary');
     card.parentElement.prepend(card);
     for (const id of ['hero-download', 'final-download']) $(id).textContent = `Download for ${OS_NAME[os]}`;
   } else if (phone) {
@@ -43,8 +44,8 @@
       const asset = found[link.dataset.asset];
       if (!asset) continue;
       link.href = asset.browser_download_url;
-      if (link.classList.contains('quiet')) link.textContent = `${link.textContent} (${megabytes(asset.size)})`;
-      else link.closest('.os').querySelector('.req').append(` · ${megabytes(asset.size)}`);
+      if ('main' in link.dataset) link.closest('.os').querySelector('.req').append(` · ${megabytes(asset.size)}`);
+      else link.textContent = `${link.textContent} (${megabytes(asset.size)})`;
     }
     const version = release.tag_name.replace(/^v/, '');
     const date = new Date(release.published_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -53,7 +54,7 @@
     if (mine) {
       for (const id of ['hero-download', 'final-download']) $(id).href = mine.browser_download_url;
       const others = Object.keys(OS_NAME).filter((name) => name !== os).map((name) => OS_NAME[name]).join(' and ');
-      $('hero-note').textContent = `Version ${version} · ${megabytes(mine.size)} · Also for ${others}. No account, no tracking.`;
+      $('hero-note').textContent = `Version ${version} · ${megabytes(mine.size)} · also for ${others}. Free and open source, with no account and no tracking.`;
     }
   }
 

@@ -22,30 +22,94 @@
 
   // ---- sample history -----------------------------------------------------------------------
 
-  // The words in the sample picture. The app reads them from the pixels; here they are known.
-  const PICTURE_TEXT = 'A screenshot you copied';
+  // The sample picture is a screenshot of a rail ticket. These are the words on it: the app
+  // reads them from the pixels; here they are known.
+  const TICKET = {
+    title: 'Mobile ticket', fare: 'Adult · Standard',
+    from: 'London Kings Cross', to: 'Edinburgh',
+    fields: [['Date', 'Sat 5 Dec'], ['Departs', '09:42'], ['Platform', '4'], ['Coach', 'C'], ['Seat', '21']],
+    reference: ['Booking reference', 'TK49QX'],
+  };
+  const PICTURE_TEXT = [
+    `${TICKET.title}  ${TICKET.fare}`,
+    `${TICKET.from} to ${TICKET.to}`,
+    TICKET.fields.map((field) => field.join(' ')).join('  '),
+    TICKET.reference.join(' '),
+  ].join('\n');
 
   const picture = (() => {
     const c = document.createElement('canvas');
     c.width = 960;
     c.height = 540;
     const g = c.getContext('2d');
-    const sky = g.createLinearGradient(0, 0, 960, 540);
-    sky.addColorStop(0, '#5b7cfa');
-    sky.addColorStop(0.55, '#8b5cf6');
-    sky.addColorStop(1, '#ec4899');
-    g.fillStyle = sky;
+    const ink = '#1d2330';
+    const faded = '#6f6656';
+    const orange = '#f0841f';
+    const type = (weight, size, family) => { g.font = `${weight} ${size}px ${family || 'system-ui, -apple-system, "Segoe UI", sans-serif'}`; };
+    g.textBaseline = 'middle';
+
+    g.fillStyle = '#fff8ea';
     g.fillRect(0, 0, 960, 540);
-    g.fillStyle = 'rgba(255,255,255,0.16)';
-    for (const [x, y, r] of [[180, 140, 90], [760, 380, 150], [640, 110, 46]]) {
-      g.beginPath();
-      g.arc(x, y, r, 0, Math.PI * 2);
-      g.fill();
-    }
+    g.fillStyle = orange;
+    g.fillRect(0, 0, 960, 88);
+    g.fillRect(0, 516, 960, 24);
+
     g.fillStyle = '#fff';
-    g.font = '700 64px system-ui, sans-serif';
-    g.textAlign = 'center';
-    g.fillText(PICTURE_TEXT, 480, 285);
+    type(600, 34);
+    g.fillText(TICKET.title, 56, 46);
+    type(500, 28);
+    g.textAlign = 'right';
+    g.fillText(TICKET.fare, 904, 46);
+    g.textAlign = 'left';
+
+    g.fillStyle = ink;
+    type(600, 60);
+    g.fillText(TICKET.from, 56, 170);
+    g.fillText(TICKET.to, 136, 248);
+    g.strokeStyle = orange;
+    g.lineWidth = 7;
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.beginPath();
+    g.moveTo(60, 248);
+    g.lineTo(108, 248);
+    g.moveTo(90, 230);
+    g.lineTo(108, 248);
+    g.lineTo(90, 266);
+    g.stroke();
+
+    TICKET.fields.forEach(([label, value], index) => {
+      const x = [56, 300, 500, 690, 820][index];
+      g.fillStyle = faded;
+      type(500, 24);
+      g.fillText(label, x, 336);
+      g.fillStyle = ink;
+      type(600, 40);
+      g.fillText(value, x, 382);
+    });
+
+    g.strokeStyle = '#d8cbb0';
+    g.lineWidth = 3;
+    g.setLineDash([12, 10]);
+    g.beginPath();
+    g.moveTo(56, 432);
+    g.lineTo(904, 432);
+    g.stroke();
+    g.setLineDash([]);
+
+    g.fillStyle = faded;
+    type(500, 24);
+    g.fillText(TICKET.reference[0], 56, 474);
+    g.fillStyle = ink;
+    type(600, 30, 'ui-monospace, "SF Mono", "Cascadia Code", Consolas, Menlo, monospace');
+    g.fillText(TICKET.reference[1], 56 + 232, 474);
+    // A barcode, as printed on the ticket.
+    let x = 640;
+    for (const width of [4, 2, 6, 2, 2, 4, 8, 2, 4, 2, 6, 4, 2, 2, 8, 2, 4, 6, 2, 4, 2, 2, 6, 4, 2, 8, 2, 4, 2, 6, 2, 4]) {
+      g.fillRect(x, 452, width, 44);
+      x += width + 4;
+    }
+
     const full = c.toDataURL('image/png');
     const t = document.createElement('canvas');
     t.width = 284;
@@ -86,14 +150,14 @@
 
   // Top of the list first. Sticky clips stay above the others.
   let clips = [
-    clip({ text: 'Hello! This is Ditto-RS running in your browser.\nType to search, then press Enter to paste into the note.', age: 1 }),
+    clip({ text: 'This is Ditto-RS, running in your browser.\nType to search, then press Enter to paste into the note.', age: 1 }),
     clip({ text: 'https://github.com/krynv/ditto-rs', source_app: 'Browser', age: 3 }),
     clip({ text: 'Best regards,\nAlex Morgan', quick_paste_text: 'sig', source_app: 'Mail', age: 8 }),
     clip({ image: true, source_app: 'Screenshot', age: 14 }),
     clip({ text: 'fn main() {\n    println!("Hello, world!");\n}', source_app: 'Code', age: 21 }),
     clip({ text: 'Meeting moved to Thursday 3 pm, room 4B', html: '<p>Meeting moved to <b>Thursday 3&nbsp;pm</b>, room <i>4B</i></p>', source_app: 'Chat', age: 35 }),
     clip({ files: ['/Users/alex/Documents/Quarterly report.pdf', '/Users/alex/Pictures/diagram.png'], source_app: 'Files', age: 50 }),
-    clip({ text: '  some text with spaces around it   ', source_app: 'Notes', age: 64 }),
+    clip({ text: '   Order 4471-2208 arrives Saturday   ', source_app: 'Mail', age: 64 }),
     clip({ text: 'git commit -m "Fix the search box focus"', source_app: 'Terminal', age: 90 }),
     clip({ text: '221B Baker Street, London NW1 6XE', source_app: 'Maps', age: 130 }),
     clip({ text: 'alex.morgan@example.com', source_app: 'Mail', age: 190 }),
