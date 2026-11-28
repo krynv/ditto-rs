@@ -12,7 +12,7 @@ jobs:
         os: [ubuntu-22.04, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Linux dependencies
         if: runner.os == 'Linux'
@@ -44,7 +44,7 @@ jobs:
 
       # A runnable build of every push, for trying a change on a real machine before a release.
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ditto-rs-${{ runner.os }}
           path: |
