@@ -936,7 +936,7 @@ dependencies = [
 
 [[package]]
 name = "ditto-core"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "image",
@@ -951,7 +951,7 @@ dependencies = [
 
 [[package]]
 name = "ditto-platform"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "clipboard-rs",
  "ditto-core",
@@ -969,7 +969,7 @@ dependencies = [
 
 [[package]]
 name = "ditto-rs"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
