@@ -22,6 +22,9 @@
 
   // ---- sample history -----------------------------------------------------------------------
 
+  // The words in the sample picture. The app reads them from the pixels; here they are known.
+  const PICTURE_TEXT = 'A screenshot you copied';
+
   const picture = (() => {
     const c = document.createElement('canvas');
     c.width = 960;
@@ -42,7 +45,7 @@
     g.fillStyle = '#fff';
     g.font = '700 64px system-ui, sans-serif';
     g.textAlign = 'center';
-    g.fillText('A screenshot you copied', 480, 285);
+    g.fillText(PICTURE_TEXT, 480, 285);
     const full = c.toDataURL('image/png');
     const t = document.createElement('canvas');
     t.width = 284;
@@ -195,7 +198,9 @@
     }
     return (c) => (scopes.description && test(c.description))
       || (scopes.quick_paste && c.quick_paste_text != null && test(c.quick_paste_text))
-      || (scopes.full_text && c.text != null && test(c.text));
+      || (scopes.full_text && c.text != null && test(c.text))
+      // As in search.rs: the text read from a picture counts under both of these scopes.
+      || ((scopes.description || scopes.full_text) && c.image && test(PICTURE_TEXT));
   }
 
   // "Special Paste", as in transform.rs.
@@ -263,7 +268,7 @@
         rtf_text: null,
         image: c.image ? picture.full : null,
         image_size: c.image ? picture.size : null,
-        image_text: c.image ? 'A screenshot you copied' : null,
+        image_text: c.image ? PICTURE_TEXT : null,
         files: c.files,
         formats: c.formats.map((name) => ({ name, size: sizes[name] })),
       };

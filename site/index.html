@@ -115,7 +115,7 @@ Select anything here and copy it. It joins your clipboard history.
           <li><strong>Open Ditto-RS.</strong> Press <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>`</kbd>, or use the button. Your copy is at the top.
             <button class="button small" id="demo-open" type="button" hidden>Open Ditto-RS</button></li>
           <li><strong>Find and paste.</strong> Type a few letters, pick a clip with <kbd>↑</kbd> <kbd>↓</kbd> and press <kbd>Enter</kbd>. It lands in the note.</li>
-          <li><strong>Look around.</strong> <kbd>F3</kbd> previews a clip. Right-click one for Special Paste, groups and sticky clips.</li>
+          <li><strong>Look around.</strong> Type <code>screenshot</code> to find the picture by the words in it. <kbd>F3</kbd> previews a clip, and a right-click offers Special Paste, groups and sticky clips.</li>
         </ol>
       </div>
     </section>
@@ -139,7 +139,7 @@ Select anything here and copy it. It joins your clipboard history.
           <li>
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
             <h3>You find things by typing</h3>
-            <p>Start typing and the list narrows. Words are combined, and you can add <code>OR</code>, <code>NOT</code>, <code>"exact phrases"</code>, wildcards or regular expressions.</p>
+            <p>Start typing and the list narrows. It finds pictures too, by the words in them. Words are combined, and you can add <code>OR</code>, <code>NOT</code>, <code>"exact phrases"</code>, wildcards or regular expressions.</p>
           </li>
           <li>
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5v6a4 4 0 0 1-4 4H5"/><path d="m9 11-4 4 4 4"/></svg>
@@ -182,7 +182,7 @@ Select anything here and copy it. It joins your clipboard history.
       <div class="showcase flip">
         <div class="showcase-text">
           <h3>Make it yours</h3>
-          <p>Light and dark themes, your own hotkeys, how much history to keep and for how long, which apps to ignore, and where the window opens. Sensible defaults, taken from Ditto, so you can leave it all alone.</p>
+          <p>Light and dark themes, your own hotkeys, how much history to keep and for how long, which apps to ignore, and where the window opens. Text too small? Turn up the interface size and everything grows at once, up to 300&nbsp;%. Sensible defaults, taken from Ditto, so you can leave it all alone.</p>
         </div>
         <div class="stage wide">
           <img src="shots/options.webp" width="1520" height="1240" loading="lazy"
@@ -215,6 +215,7 @@ Select anything here and copy it. It joins your clipboard history.
             <tr><th scope="row"><kbd>Ctrl</kbd> + <kbd>N</kbd></th><td>Write a new clip</td></tr>
             <tr><th scope="row"><kbd>Ctrl</kbd> + <kbd>G</kbd></th><td>Switch group</td></tr>
             <tr><th scope="row"><kbd>Ctrl</kbd> + <kbd>Space</kbd></th><td>Keep the window open</td></tr>
+            <tr><th scope="row"><kbd>Ctrl</kbd> + <kbd>+</kbd> <kbd>−</kbd></th><td>Make everything larger or smaller</td></tr>
             <tr><th scope="row"><kbd>Del</kbd></th><td>Delete the selected clips</td></tr>
             <tr><th scope="row"><kbd>Esc</kbd></th><td>Clear the search, then close</td></tr>
           </tbody>
@@ -262,7 +263,7 @@ Select anything here and copy it. It joins your clipboard history.
           </p>
           <details>
             <summary>Notes for Linux</summary>
-            <p>On X11 everything works. Wayland does not let apps register global hotkeys, so bind <code>ditto-rs --show</code> to a shortcut in your desktop's keyboard settings.</p>
+            <p>On X11 everything works. Wayland does not let apps register global hotkeys, so bind <code>ditto-rs --show</code> to a shortcut in your desktop's keyboard settings. To search the text in pictures, install Tesseract, for example with <code>sudo apt install tesseract-ocr</code>.</p>
           </details>
         </article>
       </div>
@@ -282,6 +283,10 @@ Select anything here and copy it. It joins your clipboard history.
           <details>
             <summary>Does anything I copy leave my computer?</summary>
             <p>No. Your history is a file on your own disk, and Ditto-RS has no account, no sync and no telemetry. The source code is public, so you do not have to take that on trust.</p>
+          </details>
+          <details>
+            <summary>How does it find the text in pictures?</summary>
+            <p>Ditto-RS reads the pictures you copy with the text recognition built into your system: Apple Vision on macOS, and Windows' own on Windows. On Linux it uses Tesseract, if you have installed it. The pictures never leave your computer, and you can switch this off in Options.</p>
           </details>
           <details>
             <summary>What about passwords?</summary>
