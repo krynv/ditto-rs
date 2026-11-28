@@ -90,23 +90,28 @@
   if (tour) {
     const steps = [...tour.querySelectorAll('.tour-step')];
     const stage = tour.querySelector('.tour-stage');
-    const rail = [...tour.querySelectorAll('.tour-rail li')];
     const wide = matchMedia('(min-width: 60rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference)');
-    const keys = { f3: tour.querySelector('.tour-key[data-key="f3"]'), enter: tour.querySelector('.tour-key[data-key="enter"]') };
+    const key = (name) => tour.querySelector(`.tour-key[data-key="${name}"]`);
+    const keys = { f3: key('f3'), copy: key('copy'), enter: key('enter') };
     const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 
     // The Ditto-RS window is a stack of pictures, in the order they happen. Each entry is where
     // on the way through the tour a picture comes on top, counted in steps (1.5 is half-way from
-    // the second step to the third), and which picture it is.
+    // the second step to the third), which picture it is, and whether the window rests there.
+    // Where it rests, the next picture is the same one without the text cursor.
     const PICTURES = [
-      [0.5, 2], [0.63, 3], [0.76, 4], [0.89, 5], // "a", "al", "ale", "alex"
-      [1.26, 6], // the search is cleared
-      ...Array.from('edinburgh', (letter, index) => [1.32 + index * 0.065, 7 + index]),
-      [2.5, 16], // F3: the preview
-      [2.92, 17], [3.12, 18], // Text in Image, then a line of it selected
-      [3.3, 19], // copied: the line is the newest clip
+      [0, 0, true], // the list
+      [0.5, 2], [0.63, 3], [0.76, 4], [0.89, 5, true], // "a", "al", "ale", "alex"
+      [1.26, 7], // the search is cleared
+      ...Array.from('edinburg', (letter, index) => [1.34 + index * 0.0675, 8 + index]),
+      [1.88, 16, true], // "edinburgh"
+      [2.5, 18, true], // F3: the preview
+      [2.88, 20, true], // Text in Image
+      [3, 22], // a line of it selected
+      [3.2, 23, true], // copied: the line is the newest clip
     ];
-    const RETURNED = 20; // the window as it comes back after the paste
+    const RETURNED = [4.5, 25, true]; // the window as it comes back after the paste
+    const BLINK = 0.055; // how much scrolling the cursor stays on, or off, for
 
     let target = 0; // where the page has scrolled to
     let shown = -1; // where the scene is
@@ -122,10 +127,12 @@
       stage.style.setProperty('--p', (at / (steps.length - 1)).toFixed(4));
       stage.style.setProperty('--wipe', ease((at - 5.55) / 0.42).toFixed(4));
 
-      // Before the first letter, the cursor blinks: on and off for each stretch of scrolling.
-      let now = at < 0.5 && Math.floor(at / 0.07) % 2 ? 1 : 0;
-      for (const [from, index] of PICTURES) if (at >= from) now = index;
-      if (returned) now = RETURNED;
+      // Which picture is on top. Where the window rests the cursor blinks, on and off for each
+      // stretch of scrolling, and it is on whenever a step is in the middle of the screen.
+      let [, now, rests] = PICTURES[0];
+      for (const entry of PICTURES) if (at >= entry[0]) [, now, rests] = entry;
+      if (returned) [, now, rests] = RETURNED;
+      if (rests && Math.floor(Math.abs(at - Math.round(at)) / BLINK + 0.5) % 2) now += 1;
       if (now !== picture) {
         picture = now;
         stage.style.setProperty('--n', now);
@@ -137,7 +144,8 @@
         key.style.setProperty('--down', at >= from + 0.13 && at < from + 0.27 ? 1 : 0);
       };
       press(keys.f3, 2.3);
-      press(keys.enter, 3.3);
+      press(keys.copy, 3.02);
+      press(keys.enter, 3.32);
 
       // While the note is in front, the paste is shown three ways in turn.
       const way = at < 3.85 ? '0' : at < 4.15 ? '1' : '2';
@@ -162,7 +170,6 @@
       if (now >= 5) back(true);
       else later = setTimeout(() => back(false), now === 4 ? 700 : 0);
       stage.dataset.step = now;
-      rail.forEach((item, index) => item.classList.toggle('now', index === now));
     }
 
     function tick(time) {
