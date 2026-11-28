@@ -90,7 +90,10 @@
   if (tour) {
     const steps = [...tour.querySelectorAll('.tour-step')];
     const stage = tour.querySelector('.tour-stage');
-    const wide = matchMedia('(min-width: 60rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference)');
+    // Beside the steps on a wide screen, under them on a narrow one; either way it needs height.
+    const narrow = matchMedia('(max-width: 59.99rem)');
+    const wide = matchMedia('(prefers-reduced-motion: no-preference) and (min-width: 60rem) and (min-height: 40rem), (prefers-reduced-motion: no-preference) and (max-width: 59.99rem) and (min-height: 34rem)');
+    const words = steps.map((step) => step.querySelector('.tour-words'));
     const key = (name) => tour.querySelector(`.tour-key[data-key="${name}"]`);
     const keys = { f3: key('f3'), copy: key('copy'), enter: key('enter') };
     const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
@@ -186,9 +189,11 @@
       if (!tour.classList.contains('is-live')) return;
       const box = tour.getBoundingClientRect();
       if (box.bottom < -innerHeight || box.top > 2 * innerHeight) return;
-      const middle = innerHeight / 2;
-      const centres = steps.map((step) => {
-        const b = step.getBoundingClientRect();
+      // The line a step's words cross when it is that step's turn: the middle of the screen,
+      // or of the part of it above the scene when the scene is held at the bottom.
+      const middle = (narrow.matches ? innerHeight - stage.offsetHeight : innerHeight) / 2;
+      const centres = words.map((text) => {
+        const b = text.getBoundingClientRect();
         return b.top + b.height / 2;
       });
       const next = centres.findIndex((centre) => centre > middle); // the first step still below the middle
@@ -225,6 +230,7 @@
     ahead.observe(tour);
 
     wide.addEventListener('change', arrange);
+    narrow.addEventListener('change', arrange);
     addEventListener('scroll', measure, { passive: true });
     addEventListener('resize', measure);
     arrange();

@@ -235,8 +235,9 @@ kbd {
 .tour-stage { display: none; }
 .tour .callout { margin-top: 4rem; }
 
-/* On a wide screen with motion allowed, site.js adds .is-live. The steps then scroll past a
-   scene that stays in view, and the script sets these on the stage:
+/* Where there is room and motion is allowed, site.js adds .is-live. The steps then scroll past
+   a scene that stays in view (beside them on a wide screen, under them on a narrow one), and
+   the script sets these on the stage:
      --p, --wipe            how far through the tour, and through the change of theme: 0 to 1,
                             following the scrolling
      --n                    which picture of the Ditto-RS window is on top: they are stacked in
@@ -408,6 +409,33 @@ details p { margin-top: 0.25rem; color: var(--text-2); }
       .hero-shot img { animation-name: window-rise; animation-timeline: scroll(root block); animation-range: 0 50rem; }
     }
   }
+}
+
+/* The live tour on a narrow screen: there is no room for the scene beside the steps, so the
+   Ditto-RS window is held at the bottom of the screen and the steps scroll through the space
+   above it. The note is behind the window, the same size, and only shows for the paste. */
+@media (max-width: 59.99rem) {
+  .tour.is-live .tour-body { display: block; }
+  .tour.is-live .tour-steps { padding-block: 0 4svh; }
+  .tour.is-live .tour-step { align-content: start; min-height: 75svh; }
+  .tour.is-live .tour-words h3 { font-size: 1.5rem; line-height: 1.25; letter-spacing: 0; }
+  .tour.is-live .tour-words p { margin-top: 0.5rem; font-size: 1.125rem; line-height: 1.5556; }
+  .tour.is-live .tour-stage { position: sticky; bottom: 0; z-index: 2; margin-inline: -1.25rem; padding: 1rem 1.25rem; background: var(--desk); border-top: 1px solid var(--line); }
+  .tour.is-live .tour-pin { position: static; height: 56svh; }
+  .tour.is-live .tour-scene { width: min(100%, calc((56svh - 0.5rem) * 0.875)); aspect-ratio: 420 / 480; scale: 1; }
+  .tour.is-live .tour-app { left: 0; top: 0; width: 100cqw; translate: 0 calc(var(--paste) * 4cqw); }
+  .tour.is-live .tour-note { left: 2cqw; top: 6cqw; width: 96cqw; height: 84cqw; font-size: 4.3cqw; translate: none; scale: calc(0.96 + var(--paste) * 0.04); }
+  .tour.is-live .tour-note-bar { height: 10cqw; gap: 2.4cqw; padding: 0 3cqw; font-size: 3.8cqw; }
+  .tour.is-live .tour-note-bar .demo-dots { gap: 1.6cqw; }
+  .tour.is-live .tour-note-bar .demo-dots i { width: 2.6cqw; height: 2.6cqw; }
+  .tour.is-live .tour-note-text { padding: 4cqw; }
+  .tour.is-live .tour-note-text .tour-how { font-size: 3.4cqw; }
+  .tour.is-live .tour-options { left: 0; top: 16cqw; width: 100cqw; }
+  .tour.is-live .tour-key { right: 4cqw; top: auto; bottom: 16cqw; gap: 2cqw; }
+  .tour.is-live .tour-key kbd { min-width: 15cqw; height: 14cqw; padding: 0 4cqw; border-radius: 2.4cqw; border-bottom-width: 1cqw; font-size: 5.4cqw; }
+}
+@media (min-width: 40rem) and (max-width: 59.99rem) {
+  .tour.is-live .tour-stage { margin-inline: -2rem; padding-inline: 2rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
