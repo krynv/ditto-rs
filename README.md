@@ -153,8 +153,9 @@ translations, and notarized macOS builds. Contributions are welcome!
 
 ## Credits & license
 
-Ditto-RS is an independent project inspired by [Ditto](https://github.com/sabrogden/Ditto) by
-Scott Brogden and contributors. It shares no code with Ditto. Like Ditto, it is licensed under the
+Ditto-RS re-creates [Ditto](https://github.com/sabrogden/Ditto) by Scott Brogden and contributors
+in Rust, working from Ditto's source code and feature list. It is a separate project and is not
+affiliated with Ditto. Like Ditto, it is licensed under the
 [GNU General Public License v3.0](LICENSE).
 
 <sub>Screenshots show the real interface rendered with sample data.</sub>
