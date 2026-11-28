@@ -92,25 +92,53 @@
     const stage = tour.querySelector('.tour-stage');
     const rail = [...tour.querySelectorAll('.tour-rail li')];
     const wide = matchMedia('(min-width: 60rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference)');
+    const keys = { f3: tour.querySelector('.tour-key[data-key="f3"]'), enter: tour.querySelector('.tour-key[data-key="enter"]') };
     const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
-    let target = 0; // where the page has scrolled to, counted in steps: 2.5 is half-way from the third to the fourth
+
+    // The Ditto-RS window is a stack of pictures, in the order they happen. Each entry is where
+    // on the way through the tour a picture comes on top, counted in steps (1.5 is half-way from
+    // the second step to the third), and which picture it is.
+    const PICTURES = [
+      [0.5, 2], [0.63, 3], [0.76, 4], [0.89, 5], // "a", "al", "ale", "alex"
+      [1.26, 6], // the search is cleared
+      ...Array.from('edinburgh', (letter, index) => [1.32 + index * 0.065, 7 + index]),
+      [2.5, 16], // F3: the preview
+      [2.92, 17], [3.12, 18], // Text in Image, then a line of it selected
+      [3.3, 19], // copied: the line is the newest clip
+    ];
+    const RETURNED = 20; // the window as it comes back after the paste
+
+    let target = 0; // where the page has scrolled to
     let shown = -1; // where the scene is
     let step = -1;
-    let typed = -1;
+    let picture = -1;
+    let returned = false;
     let frame = 0;
     let last = 0;
     let later = 0;
 
-    // What follows the scrolling itself: the drift of the windows, and the sweep of the theme.
+    // What follows the scrolling itself.
     function paint(at) {
       stage.style.setProperty('--p', (at / (steps.length - 1)).toFixed(4));
       stage.style.setProperty('--wipe', ease((at - 5.55) / 0.42).toFixed(4));
-      // On the way to the second step the search is typed, a letter for each stretch of scrolling.
-      const letters = at < 0.5 ? 0 : at < 0.63 ? 1 : at < 0.76 ? 2 : at < 0.89 ? 3 : 4;
-      if (letters !== typed) {
-        typed = letters;
-        ['--k1', '--k2', '--k3', '--t1'].forEach((name, index) => stage.style.setProperty(name, letters > index ? 1 : 0));
+
+      // Before the first letter, the cursor blinks: on and off for each stretch of scrolling.
+      let now = at < 0.5 && Math.floor(at / 0.07) % 2 ? 1 : 0;
+      for (const [from, index] of PICTURES) if (at >= from) now = index;
+      if (returned) now = RETURNED;
+      if (now !== picture) {
+        picture = now;
+        stage.style.setProperty('--n', now);
       }
+
+      // A key appears, is pressed and goes, around the change it causes.
+      const press = (key, from) => {
+        key.style.setProperty('--show', (ease((at - from) / 0.06) * (1 - ease((at - from - 0.28) / 0.08))).toFixed(3));
+        key.style.setProperty('--down', at >= from + 0.13 && at < from + 0.27 ? 1 : 0);
+      };
+      press(keys.f3, 2.3);
+      press(keys.enter, 3.3);
+
       // While the note is in front, the paste is shown three ways in turn.
       const way = at < 3.85 ? '0' : at < 4.15 ? '1' : '2';
       if (stage.dataset.paste !== way) stage.dataset.paste = way;
@@ -121,16 +149,18 @@
       if (now === step) return;
       step = now;
       const set = (name, on) => stage.style.setProperty(name, on ? 1 : 0);
-      set('--t2', now >= 2);
-      set('--t3', now >= 3);
       set('--paste', now === 4);
       set('--landed', now >= 4);
       set('--t6', now >= 6);
       // The window comes back from the paste showing its next state, and when the tour is
       // scrolled backwards it keeps that state until it has faded out again.
       clearTimeout(later);
-      if (now >= 5) stage.style.setProperty('--later', 1);
-      else later = setTimeout(() => stage.style.setProperty('--later', 0), now === 4 ? 700 : 0);
+      const back = (value) => {
+        returned = value;
+        if (shown >= 0) paint(shown);
+      };
+      if (now >= 5) back(true);
+      else later = setTimeout(() => back(false), now === 4 ? 700 : 0);
       stage.dataset.step = now;
       rail.forEach((item, index) => item.classList.toggle('now', index === now));
     }
@@ -172,9 +202,21 @@
       tour.classList.toggle('is-live', wide.matches);
       shown = -1;
       step = -1;
-      typed = -1;
+      picture = -1;
       measure();
     }
+    // The scene's pictures are fetched and decoded a screen before the tour arrives, so that
+    // none of them turns up late and holds a frame back.
+    const ahead = new IntersectionObserver((entries) => {
+      if (!tour.classList.contains('is-live') || !entries.some((entry) => entry.isIntersecting)) return;
+      ahead.disconnect();
+      for (const image of stage.querySelectorAll('img')) {
+        image.loading = 'eager';
+        image.decode().catch(() => {});
+      }
+    }, { rootMargin: '100% 0px' });
+    ahead.observe(tour);
+
     wide.addEventListener('change', arrange);
     addEventListener('scroll', measure, { passive: true });
     addEventListener('resize', measure);

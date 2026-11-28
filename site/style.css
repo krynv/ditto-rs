@@ -241,23 +241,20 @@ kbd {
    scene that stays in view, and the script sets these on the stage:
      --p, --wipe            how far through the tour, and through the change of theme: 0 to 1,
                             following the scrolling
-     --k1 --k2 --k3 --t1    the search being typed, a letter at a time: 0 before each, 1 after
-     --t2 --t3 --t6         each later change of scene: 0 before it, 1 after
+     --n                    which picture of the Ditto-RS window is on top: they are stacked in
+                            the order they happen, and each shows once --n reaches its number
+     --t6                   0, then 1 once the Options window is in
      --paste                1 while the clip is pasted into the note, 0 before and after
-     --landed --later       1 once the paste has landed, and once it is over
-   The second group are switches. They are registered as numbers so that a transition can run
-   on them: a change of scene then plays through smoothly, wherever the scrolling stops. */
-@property --k1 { syntax: "<number>"; inherits: true; initial-value: 0; }
-@property --k2 { syntax: "<number>"; inherits: true; initial-value: 0; }
-@property --k3 { syntax: "<number>"; inherits: true; initial-value: 0; }
-@property --t1 { syntax: "<number>"; inherits: true; initial-value: 0; }
-@property --t2 { syntax: "<number>"; inherits: true; initial-value: 0; }
-@property --t3 { syntax: "<number>"; inherits: true; initial-value: 0; }
+     --landed               1 once the paste has landed
+   Apart from the first two these are switches. They are registered as numbers so that a
+   transition can run on them: a change of scene then plays through smoothly, wherever the
+   scrolling stops. */
+@property --n { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --t6 { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --paste { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --landed { syntax: "<number>"; inherits: true; initial-value: 0; }
-.tour-stage { --p: 0; --wipe: 0; --later: 0; --glide: cubic-bezier(0.22, 1, 0.36, 1);
-  transition: --k1 0.12s linear, --k2 0.12s linear, --k3 0.12s linear, --t1 0.12s linear, --t2 0.45s var(--glide), --t3 0.45s var(--glide), --t6 0.7s var(--glide), --paste 0.7s var(--glide), --landed 0.3s ease 0.3s; }
+.tour-stage { --p: 0; --wipe: 0; --glide: cubic-bezier(0.22, 1, 0.36, 1);
+  transition: --n 0.14s linear, --t6 0.7s var(--glide), --paste 0.7s var(--glide), --landed 0.3s ease 0.3s; }
 .tour.is-live .tour-body { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); column-gap: 4rem; }
 /* Room above and below, so the scene is in place for the first step and stays through the last. */
 .tour.is-live .tour-steps { display: block; padding-block: 8svh 16svh; }
@@ -305,15 +302,12 @@ kbd {
   translate: calc((1 - var(--t6)) * 8cqw) calc((1 - var(--t6)) * 5cqw); }
 .tour-app picture, .tour-options picture { position: absolute; inset: 0; }
 .tour-app img, .tour-options img { width: 100%; height: 100%; }
-/* The same window, changing: each state fades in over the one before. The search is typed
-   a letter at a time, each letter its own picture of the list as it narrows. */
-.tour-app [data-layer="a"] { opacity: var(--k1); }
-.tour-app [data-layer="al"] { opacity: var(--k2); }
-.tour-app [data-layer="ale"] { opacity: var(--k3); }
-.tour-app [data-layer="alex"] { opacity: var(--t1); }
-.tour-app [data-layer="picture"] { opacity: var(--t2); }
-.tour-app [data-layer="preview"] { opacity: var(--t3); }
-.tour-app [data-layer="organise"] { opacity: var(--later); }
+/* The same window, changing. Its pictures are stacked in the order they happen: the cursor
+   blinking, each letter of a search with the list as it narrows, the preview, the text read
+   from the picture, a line of it selected, and that line in the list once it is copied. */
+.tour-app picture { opacity: calc(var(--n) - var(--i) + 1); }
+/* A key, shown as it is pressed, just before what it does. */
+.tour-key { position: absolute; left: 19cqw; top: 79cqw; display: grid; place-items: center; min-width: 10cqw; height: 9cqw; padding: 0 2.6cqw; border-radius: 1.5cqw; border-bottom-width: 0.7cqw; box-shadow: var(--lift); font-size: 3.4cqw; line-height: 1; opacity: var(--show, 0); translate: 0 calc(var(--down, 0) * 0.5cqw); scale: calc(1 - var(--down, 0) * 0.05); transition: translate 0.08s, scale 0.08s; }
 /* The other theme sweeps across the Options window, behind a thin line. */
 .tour-other { clip-path: inset(0 calc((1 - var(--wipe)) * 100%) 0 0); }
 .tour-options::after { content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--wipe) * 100% - 1px); width: 2px; background: var(--accent); opacity: calc(4 * var(--wipe) * (1 - var(--wipe))); }

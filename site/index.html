@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ditto-RS: a clipboard manager for Windows, macOS and Linux</title>
-  <meta name="description" content="Ditto-RS keeps a searchable history of everything you copy: text, pictures and files. Press a hotkey, type a few letters, press Enter. Free, open source, and nothing leaves your computer.">
+  <meta name="description" content="Ditto-RS keeps a searchable history of everything you copy: text, pictures and files. Press a hotkey, type a few letters, press Enter. Free and open source. Nothing leaves your computer.">
   <link rel="canonical" href="https://krynv.github.io/ditto-rs/">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#ebedf1" media="(prefers-color-scheme: light)">
@@ -96,7 +96,7 @@
         <div class="demo-desktop">
           <div class="demo-window" id="demo-notes">
             <div class="demo-titlebar"><span class="demo-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>Notes</span></div>
-            <label class="visually-hidden" for="demo-note">A sample note. Copy text from it, and paste clips into it.</label>
+            <label class="visually-hidden" for="demo-note">A sample note. Copy text from it and paste clips into it.</label>
             <textarea id="demo-note" spellcheck="false" autocomplete="off">Shopping list for Saturday
 
 - Sourdough from the bakery on Mill Road
@@ -123,7 +123,7 @@ Select anything here and copy it. It joins your clipboard history.
           </li>
           <li>
             <h3>Open Ditto-RS</h3>
-            <p>Press <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>`</kbd>, or use the button. Your copy is at the top.</p>
+            <p>Press <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>`</kbd> or use the button. Your copy is at the top.</p>
             <button class="button small" id="demo-open" type="button" hidden>Open Ditto-RS</button>
           </li>
           <li>
@@ -132,7 +132,7 @@ Select anything here and copy it. It joins your clipboard history.
           </li>
           <li>
             <h3>Look around</h3>
-            <p>Type <code>edinburgh</code> to find the train ticket by the words on it. <kbd>F3</kbd> previews a clip, and a right-click offers Special Paste, groups and sticky clips.</p>
+            <p>Type <code>edinburgh</code> to find the train ticket by the words on it. <kbd>F3</kbd> previews a clip and a right-click offers Special Paste, groups and sticky clips.</p>
           </li>
         </ol>
       </div>
@@ -195,7 +195,7 @@ Select anything here and copy it. It joins your clipboard history.
             <li class="tour-step">
               <div class="tour-words">
                 <h3>You look before you paste</h3>
-                <p><kbd>F3</kbd> shows the whole clip: the full text, the picture at full size, or the list of files.</p>
+                <p><kbd>F3</kbd> shows the whole clip: the full text, the picture at full size or the list of files. <strong>Text in Image</strong> shows the words it read in a picture, ready to select and copy.</p>
               </div>
               <figure class="tour-still">
                 <picture>
@@ -208,26 +208,26 @@ Select anything here and copy it. It joins your clipboard history.
             <li class="tour-step">
               <div class="tour-words">
                 <h3>It pastes where you were</h3>
-                <p><kbd>Enter</kbd> puts the clip into the app you came from. Special Paste changes it on the way: UPPER CASE, trimmed, or as a web-address slug.</p>
+                <p><kbd>Enter</kbd> puts the clip into the app you came from. Special Paste changes it on the way: UPPER CASE, trimmed or as a web-address slug.</p>
               </div>
             </li>
             <li class="tour-step">
               <div class="tour-words">
                 <h3>You keep what matters</h3>
-                <p>Pin clips to the top, sort them into groups, and give your favourites their own hotkey.</p>
+                <p>Pin clips to the top, sort them into groups and give your favourites their own hotkey.</p>
               </div>
               <figure class="tour-still">
                 <picture>
                   <source media="(prefers-color-scheme: dark)" srcset="shots/tour-organise-dark.webp">
                   <img src="shots/tour-organise-light.webp" width="1050" height="1200" loading="lazy"
-                       alt="The list with a pinned signature at the top, two clips marked as being in a group, and one with its own hotkey.">
+                       alt="The list with a pinned signature at the top, two clips marked as being in a group and one with its own hotkey.">
                 </picture>
               </figure>
             </li>
             <li class="tour-step">
               <div class="tour-words">
                 <h3>You make it yours</h3>
-                <p>Light and dark themes, your own hotkeys, and an interface size up to 300&nbsp;% when the text is too small.</p>
+                <p>Light and dark themes, your own hotkeys and an interface size up to 300&nbsp;% when the text is too small.</p>
               </div>
               <figure class="tour-still">
                 <picture>
@@ -248,44 +248,98 @@ Select anything here and copy it. It joins your clipboard history.
                   <div class="tour-note-text">
                     <p>Shopping list for Saturday</p>
                     <p>- Sourdough from the bakery on Mill Road<br>- Two lemons, flat-leaf parsley, good olive oil<br>- Call the plumber: 020 7946 0321</p>
-                    <p class="tour-pasted"><span>Order 4471-2208 arrives Saturday</span><span>ORDER 4471-2208 ARRIVES SATURDAY</span><span>order-4471-2208-arrives-saturday</span></p>
+                    <p class="tour-pasted"><span>London Kings Cross to Edinburgh</span><span>LONDON KINGS CROSS TO EDINBURGH</span><span>london-kings-cross-to-edinburgh</span></p>
                     <p class="tour-how"><span><kbd>Enter</kbd></span><span>Special Paste: UPPER CASE</span><span>Special Paste: Slugify</span></p>
                   </div>
                 </div>
                 <div class="tour-app">
-                  <picture data-layer="list">
+                  <picture style="--i: 0">
                     <source media="(prefers-color-scheme: dark)" srcset="shots/tour-list-dark.webp">
                     <img src="shots/tour-list-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
                   </picture>
-                  <picture data-layer="a">
+                  <picture style="--i: 1">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-list-off-dark.webp">
+                    <img src="shots/tour-list-off-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 2">
                     <source media="(prefers-color-scheme: dark)" srcset="shots/tour-find-1-dark.webp">
                     <img src="shots/tour-find-1-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
                   </picture>
-                  <picture data-layer="al">
+                  <picture style="--i: 3">
                     <source media="(prefers-color-scheme: dark)" srcset="shots/tour-find-2-dark.webp">
                     <img src="shots/tour-find-2-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
                   </picture>
-                  <picture data-layer="ale">
+                  <picture style="--i: 4">
                     <source media="(prefers-color-scheme: dark)" srcset="shots/tour-find-3-dark.webp">
                     <img src="shots/tour-find-3-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
                   </picture>
-                  <picture data-layer="alex">
+                  <picture style="--i: 5">
                     <source media="(prefers-color-scheme: dark)" srcset="shots/tour-find-dark.webp">
                     <img src="shots/tour-find-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
                   </picture>
-                  <picture data-layer="picture">
+                  <picture style="--i: 6">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-list-dark.webp">
+                    <img src="shots/tour-list-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 7">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-pic-1-dark.webp">
+                    <img src="shots/tour-pic-1-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 8">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-pic-2-dark.webp">
+                    <img src="shots/tour-pic-2-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 9">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-pic-3-dark.webp">
+                    <img src="shots/tour-pic-3-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 10">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-pic-4-dark.webp">
+                    <img src="shots/tour-pic-4-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 11">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-pic-5-dark.webp">
+                    <img src="shots/tour-pic-5-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 12">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-pic-6-dark.webp">
+                    <img src="shots/tour-pic-6-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 13">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-pic-7-dark.webp">
+                    <img src="shots/tour-pic-7-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 14">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-pic-8-dark.webp">
+                    <img src="shots/tour-pic-8-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 15">
                     <source media="(prefers-color-scheme: dark)" srcset="shots/tour-picture-dark.webp">
                     <img src="shots/tour-picture-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
                   </picture>
-                  <picture data-layer="preview">
+                  <picture style="--i: 16">
                     <source media="(prefers-color-scheme: dark)" srcset="shots/tour-preview-dark.webp">
                     <img src="shots/tour-preview-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
                   </picture>
-                  <picture data-layer="organise">
+                  <picture style="--i: 17">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-preview-text-dark.webp">
+                    <img src="shots/tour-preview-text-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 18">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-preview-select-dark.webp">
+                    <img src="shots/tour-preview-select-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 19">
+                    <source media="(prefers-color-scheme: dark)" srcset="shots/tour-copied-dark.webp">
+                    <img src="shots/tour-copied-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
+                  </picture>
+                  <picture style="--i: 20">
                     <source media="(prefers-color-scheme: dark)" srcset="shots/tour-organise-dark.webp">
                     <img src="shots/tour-organise-light.webp" width="1050" height="1200" alt="" loading="lazy" decoding="async">
                   </picture>
                 </div>
+                <kbd class="tour-key" data-key="f3">F3</kbd>
+                <kbd class="tour-key" data-key="enter">Enter</kbd>
                 <div class="tour-options">
                   <picture>
                     <source media="(prefers-color-scheme: dark)" srcset="shots/tour-options-dark.webp">
@@ -318,7 +372,7 @@ Select anything here and copy it. It joins your clipboard history.
           <caption class="visually-hidden">Keys in the quick-paste window</caption>
           <thead class="visually-hidden"><tr><th scope="col">Keys</th><th scope="col">What they do</th></tr></thead>
           <tbody>
-            <tr><th scope="row"><kbd>Enter</kbd></th><td>Paste the selected clip, or clips</td></tr>
+            <tr><th scope="row"><kbd>Enter</kbd></th><td>Paste the selected clip or clips</td></tr>
             <tr><th scope="row"><kbd>Shift</kbd> + <kbd>Enter</kbd></th><td>Paste as plain text</td></tr>
             <tr><th scope="row"><kbd>Ctrl</kbd> + <kbd>1</kbd> … <kbd>0</kbd></th><td>Paste clip 1 to 10</td></tr>
             <tr><th scope="row"><kbd>Shift</kbd> + <kbd>↑</kbd> <kbd>↓</kbd></th><td>Select several clips</td></tr>
@@ -348,7 +402,7 @@ Select anything here and copy it. It joins your clipboard history.
           <p class="os-buttons"><a class="button" data-main data-asset="dmg" href="https://github.com/krynv/ditto-rs/releases/latest">Download for macOS</a></p>
           <details>
             <summary>First launch on a Mac</summary>
-            <p>The app is not notarized by Apple yet, so macOS will say it cannot check it. Try to open it once, then go to <strong>System Settings → Privacy &amp; Security</strong> and choose <strong>Open Anyway</strong>. When asked, allow <strong>Accessibility</strong> access so Ditto-RS can paste for you.</p>
+            <p>The app is not notarised by Apple yet, so macOS will say it cannot check it. Try to open it once, then go to <strong>System Settings → Privacy &amp; Security</strong> and choose <strong>Open Anyway</strong>. When asked, allow <strong>Accessibility</strong> access so Ditto-RS can paste for you.</p>
           </details>
         </article>
 
@@ -394,15 +448,15 @@ Select anything here and copy it. It joins your clipboard history.
           </details>
           <details>
             <summary>Does anything I copy leave my computer?</summary>
-            <p>No. Your history is a file on your own disk, and Ditto-RS has no account, no sync and no telemetry. The source code is public, so you do not have to take that on trust.</p>
+            <p>No. Your history is a file on your own disk and Ditto-RS has no account, no sync and no telemetry. The source code is public, so you do not have to take that on trust.</p>
           </details>
           <details>
             <summary>How does it find the text in pictures?</summary>
-            <p>Ditto-RS reads the pictures you copy with the text recognition built into your system: Apple Vision on macOS, and Windows' own on Windows. On Linux it uses Tesseract, if you have installed it. The pictures never leave your computer, and you can switch this off in Options.</p>
+            <p>Ditto-RS reads the pictures you copy with the text recognition built into your system: Apple Vision on macOS and Windows' own on Windows. On Linux it uses Tesseract, if you have installed it. The pictures never leave your computer and you can switch this off in Options.</p>
           </details>
           <details>
             <summary>What about passwords?</summary>
-            <p>Copies that password managers mark as secret are skipped. You can also list apps whose copies should never be saved, and switch saving off for a while from the menu.</p>
+            <p>Copies that password managers mark as secret are skipped. You can also list apps whose copies should never be saved and switch saving off for a while from the menu.</p>
           </details>
           <details>
             <summary>Is this the same as Ditto?</summary>
@@ -432,7 +486,7 @@ Select anything here and copy it. It joins your clipboard history.
 
   <footer class="footer">
     <div class="wrap">
-      <p><strong>Ditto-RS</strong> is free software under the <a href="https://github.com/krynv/ditto-rs/blob/main/LICENSE">GNU General Public License v3.0</a>. It is a re-creation of <a href="https://github.com/sabrogden/Ditto">Ditto</a> by Scott Brogden and contributors, and is not affiliated with it.</p>
+      <p><strong>Ditto-RS</strong> is free software under the <a href="https://github.com/krynv/ditto-rs/blob/main/LICENSE">GNU General Public License v3.0</a>. It is a re-creation of <a href="https://github.com/sabrogden/Ditto">Ditto</a> by Scott Brogden and contributors. It is not affiliated with Ditto.</p>
       <p><a href="https://github.com/krynv/ditto-rs">Source code</a> - <a href="https://github.com/krynv/ditto-rs/issues">Report a problem</a> - <a href="https://github.com/krynv/ditto-rs/releases">Releases</a></p>
       <p>This page uses no cookies and no trackers</p>
     </div>

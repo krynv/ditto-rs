@@ -272,7 +272,7 @@
   const TRANSFORMS = [
     ['upper_case', 'UPPER CASE', (s) => s.toUpperCase()],
     ['lower_case', 'lower case', (s) => s.toLowerCase()],
-    ['capitalize', 'Capitalize Case', (s) => words(s.toLowerCase(), (w) => w[0].toUpperCase() + w.slice(1))],
+    ['capitalize', 'Capitalise Case', (s) => words(s.toLowerCase(), (w) => w[0].toUpperCase() + w.slice(1))],
     ['sentence_case', 'Sentence case', (s) => s.toLowerCase().replace(/(^\s*|[.!?]\s+)(\p{L})/gu, (m, a, b) => a + b.toUpperCase())],
     ['invert_case', 'Invert Case', (s) => [...s].map((ch) => (ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase())).join('')],
     ['trim_white_space', 'Trim White Space', (s) => s.trim()],
